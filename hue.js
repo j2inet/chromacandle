@@ -59,6 +59,8 @@ var HueBridge = /** @class */ (function () {
     function HueBridge(b, username) {
         if (username === void 0) { username = null; }
         this._groupMapping = new Array();
+        this._sceneMapping = new Array();
+        this._lightMapping = new Array();
         this._bridgeInfo = b;
         this._username = username;
     }
@@ -109,12 +111,62 @@ var HueBridge = /** @class */ (function () {
             });
         });
     };
+    HueBridge.prototype.getScenes = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            var url;
+            var _this = this;
+            return __generator(this, function (_a) {
+                url = "http://" + this._bridgeInfo.internalipaddress + "/api/" + this._username + "/scenes";
+                return [2 /*return*/, new Promise(function (resolve, rejecct) {
+                        fetch(url)
+                            .then(function (resp) { return resp.json(); })
+                            .then(function (data) {
+                            var sceneMap = new Array();
+                            for (var id in data) {
+                                sceneMap.push([id, data[id].name]);
+                            }
+                            _this._sceneMapping = sceneMap;
+                            resolve(data);
+                        });
+                    })];
+            });
+        });
+    };
     HueBridge.prototype.getLights = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 return [2 /*return*/, new Promise(function (resolve, reject) {
                         var url = "http://" + _this._bridgeInfo.internalipaddress + "/api/" + _this._username + "/lights";
+                        fetch(url)
+                            .then(function (resp) { return resp.json(); })
+                            .then(function (data) {
+                            console.log('Lights:', data);
+                            var lightMapping = new Array();
+                            for (var key in data) {
+                                var k = parseInt(key);
+                                lightMapping.push([k, data[key].name]);
+                            }
+                            resolve(data);
+                        })["catch"](function (err) {
+                            console.log('error:', err);
+                            reject(err);
+                        });
+                    })];
+            });
+        });
+    };
+    HueBridge.prototype.getLight = function (lightID) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        var url = "http://" + _this._bridgeInfo.internalipaddress + "/api/" + _this._username + "/lights/" + lightID;
+                        fetch(url)
+                            .then(function (resp) { return resp.json(); })
+                            .then(function (data) {
+                            resolve(data);
+                        });
                     })];
             });
         });
@@ -346,10 +398,21 @@ function dance(hb) {
         var lastUpdate = 0;
         var a = {};
         a.on = true;
-        a.bri = 254;
+        a.bri = 0;
         a.hue = 0;
         a.sat = 16;
         hb.setGroupState("3", a);
+        hb.getLights()
+            .then(function (x) { return console.log('lights', x); });
+        hb.getScenes()
+            .then(function (scenes) {
+            console.log('Scenes:', scenes);
+        });
+        console.log('__');
+        hb.getLight(3)
+            .then(function (light) {
+            console.log('Light:', light);
+        });
         var player = document.getElementById('audioPlayer');
         var lastTimeEvent = -1;
         var currentEventIndex = 0;

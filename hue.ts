@@ -161,10 +161,52 @@ class HueBridge {
 		});
 	}
 
+	async getScenes():Promise<Object> {
+		const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/scenes`;
+		return new Promise((resolve,rejecct)=> {
+			fetch(url)
+			.then(resp=>resp.json())
+			.then((data)=> {
+				let sceneMap = new Array<[string, string]>();
+				for(var id in data) {
+					sceneMap.push([id, data[id].name]);
+				}
+				this._sceneMapping = sceneMap;
+				resolve(data);
+			});
+		})
+	}
+
 	async getLights(): Promise<Object> {
 		return new Promise((resolve,reject)=> {
 			const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/lights`;
+			fetch(url)
+			.then(resp=>resp.json())
+			.then(data=>  {
+				console.log('Lights:', data);
+				let lightMapping = new Array<[number, string]>();
+				for(var key in data) { 
+					const k = parseInt(key);
+					lightMapping.push([k, data[key].name]);
+				}
+				resolve(data);
+			} )
+			.catch(err=> {
+				console.log('error:', err);
+				reject(err)
+			});
+		});
+	}
 
+	async getLight(lightID): Promise<IBulbState> { 
+		return new Promise((resolve, reject) => { 
+			const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/lights/${lightID}`;
+			fetch(url)
+			.then(resp=>resp.json())
+			.then(data=> {
+
+				resolve(data);
+			});
 		});
 	}
 
@@ -213,6 +255,8 @@ class HueBridge {
 	_bridgeInfo:IBridgeInfo;
 	_username:string;
 	_groupMapping:Array<[string, string]> = new Array<[string, string]>();
+	_sceneMapping:Array<[string, string]> = new Array<[string, string]>();
+	_lightMapping:Array<[Number, string]> = new Array<[number, string]>();
 }
 
 
@@ -378,10 +422,23 @@ function dance(hb:HueBridge) {
 		let lastUpdate:Number = 0;
 		let a:ILightState = {} as ILightState;
 		a.on = true;
-		a.bri = 254;
+		a.bri = 0;
 		a.hue = 0;
 		a.sat = 16;
 		hb.setGroupState("3", a);
+		hb.getLights()
+		.then(x=>console.log('lights',x));
+
+		hb.getScenes()
+		.then((scenes)=> {
+			console.log('Scenes:',	scenes);
+		});
+		console.log('__');
+		hb.getLight(3)
+		.then((light)=> {
+			console.log('Light:', light);
+		})
+
 		var player:any = document.getElementById('audioPlayer');
 		let lastTimeEvent = -1;
 		let currentEventIndex = 0;
