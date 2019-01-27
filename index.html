@@ -2,7 +2,10 @@
     <head>
         <script src="hue.js"></script>
     </head>
-    <body onload="main()">
+    <body onload="main()" onkeydown="keyProcessor()">
+        <audio id="audioPlayer" src="./BlackStreet.mp3">
+        </audio>
 
+        <button id="playButton" disabled onclick="play()" >Start</button>
     </body>
 </html>
