@@ -293,10 +293,10 @@ var timeColorMapping = [
     { time: 10.987653, data: { on: true, bri: 254, hue: 48000, sat: 255, transitiontime: 1 } },
 ];
 timeColorMapping = [
-    { time: 0, data: { on: true, bri: 254, hue: 0, sat: 255, transitiontime: 1 } },
-    { time: 2.18218, data: { on: true, bri: 254, hue: 0, sat: 255, transitiontime: 1 } },
+    { time: 0, data: { on: true, bri: 254, hue: 0, sat: 0, transitiontime: 1 } },
+    { time: 2.18218, data: { on: true, bri: 254, hue: 16000, sat: 255, transitiontime: 1 } },
     { time: 8.109902, data: { on: true, bri: 254, hue: 32000, sat: 255, transitiontime: 1 } },
-    { time: 11.029885, data: { on: true, bri: 254, hue: 0, sat: 255, transitiontime: 1 } },
+    { time: 11.029885, data: { on: true, bri: 254, hue: 48000, sat: 255, transitiontime: 1 } },
     { time: 12.469935, data: { on: true, bri: 254, hue: 32000, sat: 255, transitiontime: 1 } },
     { time: 13.949865, data: { on: true, bri: 254, hue: 0, sat: 255, transitiontime: 1 } },
     { time: 25.749921, data: { on: true, bri: 254, hue: 32000, sat: 255, transitiontime: 1 } },
@@ -310,25 +310,25 @@ timeColorMapping = [
     { time: 93.509806, data: { on: true, bri: 254, hue: 32000, sat: 255, transitiontime: 1 } },
     { time: 94.189913, data: { on: true, bri: 254, hue: 0, sat: 255, transitiontime: 1 } },
     { time: 94.861889, data: { on: true, bri: 254, hue: 16000, sat: 255, transitiontime: 1 } },
-    { time: 95.597983, data: { on: true, bri: 254, hue: 0, sat: 255, transitiontime: 1 } },
+    { time: 95.597983, data: { on: true, bri: 254, hue: 48000, sat: 255, transitiontime: 1 } },
     { time: 96.389919, data: { on: true, bri: 254, hue: 16000, sat: 255, transitiontime: 1 } },
-    { time: 119.965844, data: { on: true, bri: 254, hue: 0, sat: 255, transitiontime: 1 } },
-    { time: 131.757882, data: { on: true, bri: 254, hue: 16000, sat: 255, transitiontime: 1 } },
-    { time: 143.509912, data: { on: true, bri: 254, hue: 0, sat: 255 } },
-    { time: 155.261646, data: { on: true, bri: 254, hue: 16000, sat: 255 } },
-    { time: 167.053874, data: { on: true, bri: 254, hue: 0, sat: 255 } },
+    { time: 119.965844, data: { on: true, bri: 254, hue: 32000, sat: 255, transitiontime: 1 } },
+    { time: 131.757882, data: { on: true, bri: 254, hue: 48000, sat: 255, transitiontime: 1 } },
+    { time: 143.509912, data: { on: true, bri: 254, hue: 16000, sat: 255 } },
+    { time: 155.261646, data: { on: true, bri: 254, hue: 48000, sat: 255 } },
+    { time: 167.053874, data: { on: true, bri: 254, hue: 32000, sat: 255 } },
     { time: 178.829756, data: { on: true, bri: 254, hue: 16000, sat: 255 } },
-    { time: 184.733943, data: { on: true, bri: 254, hue: 0, sat: 255 } },
-    { time: 190.645682, data: { on: true, bri: 254, hue: 16000, sat: 255 } },
-    { time: 202.36593, data: { on: true, bri: 254, hue: 0, sat: 255 } },
+    { time: 184.733943, data: { on: true, bri: 254, hue: 8000, sat: 255 } },
+    { time: 190.645682, data: { on: true, bri: 254, hue: 48000, sat: 255 } },
+    { time: 202.36593, data: { on: true, bri: 254, hue: 12000, sat: 255 } },
     { time: 214.13379, data: { on: true, bri: 254, hue: 16000, sat: 255 } },
-    { time: 220.005664, data: { on: true, bri: 254, hue: 0, sat: 255 } },
+    { time: 220.005664, data: { on: true, bri: 254, hue: 48000, sat: 255 } },
     { time: 223.005904, data: { on: true, bri: 254, hue: 16000, sat: 255 } },
-    { time: 224.429941, data: { on: true, bri: 254, hue: 0, sat: 255 } },
-    { time: 225.917788, data: { on: true, bri: 254, hue: 16000, sat: 255 } },
-    { time: 237.765938, data: { on: true, bri: 254, hue: 0, sat: 255 } },
-    { time: 240.621472, data: { on: true, bri: 254, hue: 16000, sat: 255 } },
-    { time: 243.573986, data: { on: true, bri: 254, hue: 0, sat: 255 } }
+    { time: 224.429941, data: { on: true, bri: 254, hue: 32000, sat: 255 } },
+    { time: 225.917788, data: { on: true, bri: 128, hue: 16000, sat: 255 } },
+    { time: 237.765938, data: { on: true, bri: 128, hue: 48000, sat: 255 } },
+    { time: 240.621472, data: { on: true, bri: 128, hue: 32000, sat: 255 } },
+    { time: 243.573986, data: { on: true, bri: 32, hue: 0, sat: 64, transitiontime: 100 } }
 ];
 function keyProcessor(e) {
     var player = document.getElementById('audioPlayer');
@@ -367,7 +367,7 @@ function dance(hb) {
                 }
             }
             //console.log(player.currentTime)
-        }, 250);
+        }, 50);
     });
 }
 function main() {
