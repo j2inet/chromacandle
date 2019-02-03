@@ -12,8 +12,15 @@ body {
     
 }
 
+.palette { 
+	display:none;
+}
 .splash { 
-	background-image:url('./images/splash.jpg');
+	opacity:0;
+	background-image:url('../images/splashScreen.jpg');
+	height:1080px;
+	width:1920px;
+	transition: opacity 3s;
 }
 
 header h1 {

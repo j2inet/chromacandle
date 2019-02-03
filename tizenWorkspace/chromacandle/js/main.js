@@ -2,6 +2,17 @@ var checkTime;
 
 //Initialize function
 var init = function () {
+	var hdb = new HueDB();
+	var hueFinder = new HueFinder();
+	HueFinder.fin
+	var targetElement = document.getElementById("splashScreen");
+	setTimeout(function(){
+		targetElement.style.opacity = 1;	
+		setTimeout(function(){
+			targetElement.style.opacity=0;
+		},4000)
+	}, 1000);
+	
     // TODO:: Do your initialization job
     console.log('init() called');
     

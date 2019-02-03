@@ -460,6 +460,41 @@ function dance(hb:HueBridge) {
 	});
 }
 
+
+
+
+function runSplash() { 
+	let targetElement = document.getElementById("splashScreen");
+	setTimeout(function(){
+		targetElement.style.opacity = "1";	
+		setTimeout(function(){
+			targetElement.style.opacity="0";
+		},5500)
+	}, 1000);
+}
+
+function tizenInit() { 
+	runSplash();
+	registerKeyListener();
+	let db = new HueDB();
+	db.ensureCreate()
+	.then(()=>{
+		db.readBridgeList()
+		.then((bridgeList)=> { 
+			console.log('Bridge List', bridgeList);
+			let finder = new HueFinder();
+			finder.find()
+			.then((discoveredBridgeList)=> {
+				console.log('Discovered Bridge List', discoveredBridgeList);
+			});
+		})
+	})
+}
+if(window.hasOwnProperty("tizen")) {
+	window.onload = tizenInit;
+} else {
+	window.onload = runSplash;
+}
 function main():void  { 
 	//debugger;
 	let lastUsername:string = localStorage.getItem("lastUsername");
@@ -514,6 +549,30 @@ function main():void  {
 			.catch((e) => {
 				console.log('pairing failed', e)
 			});
+		}
+	});
+}
+
+
+function registerKeyListener() { 
+	document.addEventListener('keydown', function(e) {
+    	switch(e.keyCode){
+    	case 37: //LEFT arrow
+    		break;
+    	case 38: //UP arrow
+    		break;
+    	case 39: //RIGHT arrow
+    		break;
+    	case 40: //DOWN arrow
+    		break;
+    	case 13: //OK button
+    		break;
+    	case 10009: //RETURN button
+			window["tizen"].application.getCurrentApplication().exit();
+    		break;
+    	default:
+    		console.log('Key code : ' + e.keyCode);
+    		break;
 		}
 	});
 }
