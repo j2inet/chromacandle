@@ -47,7 +47,7 @@ interface ILightState {
 	colormode:string, 
 	transitiontime:Number,
 	mode:string,
-	reachable
+	reachable:boolean
 }
 interface ICTRange { 
 	min:Number, 
@@ -117,7 +117,10 @@ interface LightGroupList {
 
 
 class HueBridge { 
-	constructor(b:IBridgeInfo, username:string = null) {
+	constructor(b:IBridgeInfo, username?:string|null|undefined) {
+		if(!username) {
+			username = null;
+		}
 		this._bridgeInfo = b;
 		this._username = username;
 	};
@@ -141,7 +144,7 @@ class HueBridge {
 		});
 	}
 
-	async setGroupState(groupID, action:ILightState) {
+	async setGroupState(groupID:string, action:ILightState) {
 		return new Promise((resolve,reject)=> {
 			const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/groups/${groupID}/action`;
 			fetch(url, {
@@ -198,7 +201,7 @@ class HueBridge {
 		});
 	}
 
-	async getLight(lightID): Promise<IBulbState> { 
+	async getLight(lightID:string|number): Promise<IBulbState> { 
 		return new Promise((resolve, reject) => { 
 			const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/lights/${lightID}`;
 			fetch(url)
@@ -253,7 +256,7 @@ class HueBridge {
 		})
 	}
 	_bridgeInfo:IBridgeInfo;
-	_username:string;
+	_username:string|null;
 	_groupMapping:Array<[string, string]> = new Array<[string, string]>();
 	_sceneMapping:Array<[string, string]> = new Array<[string, string]>();
 	_lightMapping:Array<[Number, string]> = new Array<[number, string]>();
@@ -291,7 +294,7 @@ class HueDB {
 		return new Promise((resolve, reject)=> {
 			let trans = this._db.transaction([HUE_BRIDGE_OBJSTORE], "readwrite");
 			trans.oncomplete = ()=>resolve("complete");
-			trans.onerror = (err)=>reject(err);
+			trans.onerror = (err:any)=>reject(err);
 			let objStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
 			let request = objStore.add(b);	
 			request.onsuccess = () => {
@@ -304,7 +307,7 @@ class HueDB {
 		return new Promise((resolve, reject)=> {
 			var trans = this._db.transaction(["hueBridge"], "readwrite");
 			trans.oncoplete = () => resolve("complete");
-			trans.onerror = (err) => reject(err);
+			trans.onerror = (err:any) => reject(err);
 			trans.objectStore("hueBridge").delete(b.id);
 		});
 	}
@@ -314,7 +317,7 @@ class HueDB {
 		return new Promise((resolve, reject)=> {
 			var trans = this._db.transaction([HUE_BRIDGE_OBJSTORE]);
 			var objectStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
-			objectStore.openCursor().onsuccess = (event) => {
+			objectStore.openCursor().onsuccess = (event:any) => {
 				var cursor = event.target.result;
 				if(cursor) {
 					retVal.push(cursor.value);
@@ -328,7 +331,7 @@ class HueDB {
 
 	async getBridge(b:IBridgeInfo) {
 		return new Promise((resolve, reject)=> {
-			this._db.transaction(HUE_BRIDGE_OBJSTORE).objectStore(HUE_BRIDGE_OBJSTORE).get(b.id).onsuccess = (event) => { 
+			this._db.transaction(HUE_BRIDGE_OBJSTORE).objectStore(HUE_BRIDGE_OBJSTORE).get(b.id).onsuccess = (event:any) => { 
 				resolve(event.target.result);
 			}
 		});
@@ -340,14 +343,14 @@ class HueDB {
 		return new Promise((resolve, reject) => {
 			var objectStore = this._db.transaction([HUE_BRIDGE_OBJSTORE], "readwrite").objectStore(HUE_BRIDGE_OBJSTORE);
 			var request = objectStore.get(b.id);
-			request.onerror = (err)=>reject(err);
-			request.onsuccess = (event) => { 
+			request.onerror = (err:any)=>reject(err);
+			request.onsuccess = (event:any) => { 
 				var data = event.target.result;
 				var requestUpdate = objectStore.put(b);
-				requestUpdate.onerror = (event) => {
+				requestUpdate.onerror = (event:any) => {
 					reject(event);
 				}
-				requestUpdate.onsuccess = (event) => {
+				requestUpdate.onsuccess = (event:any) => {
 					resolve(event.target.result);
 				}
 			};
@@ -404,7 +407,7 @@ timeColorMapping = [
     { time: 243.573986, data: { on: true, bri: 32, hue: 0, sat: 64, transitiontime:100 } }
 	];
 
-function keyProcessor(e) {
+function keyProcessor(e:any) {
 
 	var player:any = document.getElementById('audioPlayer');
 	console.log(player.currentTime);
@@ -417,7 +420,9 @@ function play() {
 function dance(hb:HueBridge) { 
 	let groups = hb.getGroups()
 	.then((r)=> {
-		document.getElementById('playButton').removeAttribute('disabled');
+		let playButton = document.getElementById('playButton')
+		if(playButton)
+			playButton!.removeAttribute('disabled');
 		console.log(r);
 		let lastUpdate:Number = 0;
 		let a:ILightState = {} as ILightState;
@@ -465,12 +470,14 @@ function dance(hb:HueBridge) {
 
 function runSplash() { 
 	let targetElement = document.getElementById("splashScreen");
-	setTimeout(function(){
-		targetElement.style.opacity = "1";	
+	if(targetElement) {
 		setTimeout(function(){
-			targetElement.style.opacity="0";
-		},5500)
-	}, 1000);
+			targetElement!.style.opacity = "1";	
+			setTimeout(function(){
+				targetElement!.style.opacity="0";
+			},5500)
+		}, 1000);
+	}
 }
 
 function tizenInit() { 
@@ -497,7 +504,7 @@ if(window.hasOwnProperty("tizen")) {
 }
 function main():void  { 
 	//debugger;
-	let lastUsername:string = localStorage.getItem("lastUsername");
+	let lastUsername:string|null = localStorage.getItem("lastUsername");
 	let db = new HueDB();
 	db.ensureCreate()
 	.then(()=> {
@@ -507,7 +514,7 @@ function main():void  {
 			var hf = new HueFinder();
 			hf.find()
 			.then(bl_fn=> {
-				var chosenBridge:IBridgeInfo = null;
+				var chosenBridge:IBridgeInfo|null = null;
 				if(bl_db) {
 					bl_fn.forEach((b)=> { 
 						var elem = bl_db.find((x)=>x.id==b.id);
@@ -519,15 +526,15 @@ function main():void  {
 						}
 					});
 				}
-				if(!chosenBridge) {
+				if(chosenBridge!=null) {
 					if(bl_fn.length>0)  {
 						chosenBridge = bl_fn[0];
 						let b = new HueBridge(chosenBridge);
 						b.tryPair()
 						.then((b)=> {
-							chosenBridge.userInfo = b;
-							db.insertBridge(chosenBridge);
-							let hueBridge = new HueBridge(chosenBridge, b.username);
+							chosenBridge!.userInfo = b;
+							db.insertBridge(chosenBridge!);
+							let hueBridge = new HueBridge(chosenBridge!, b.username);
 						})
 					}
 				}

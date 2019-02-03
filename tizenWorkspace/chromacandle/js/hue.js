@@ -1,3 +1,4 @@
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -6,339 +7,270 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+const DISCOVERY_URL = "https://discovery.meethue.com";
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HUE_DATABASE = "hueDB";
+const HUE_BRIDGE_OBJSTORE = "bridge";
+const PAIRING_TIMEOUT = 3 * MINUTE;
+class HueFinder {
+    constructor() {
     }
-};
-var DISCOVERY_URL = "https://discovery.meethue.com";
-var SECOND = 1000;
-var MINUTE = 60 * SECOND;
-var HUE_DATABASE = "hueDB";
-var HUE_BRIDGE_OBJSTORE = "bridge";
-var PAIRING_TIMEOUT = 3 * MINUTE;
-var HueFinder = /** @class */ (function () {
-    function HueFinder() {
-    }
-    HueFinder.prototype.find = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        fetch(DISCOVERY_URL)
-                            .then(function (resp) { return resp.json(); })
-                            .then(function (bridgeList) { resolve(bridgeList); });
-                    })];
+    find() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                fetch(DISCOVERY_URL)
+                    .then(resp => resp.json())
+                    .then(bridgeList => { resolve(bridgeList); });
             });
         });
-    };
-    return HueFinder;
-}());
-var HueBridge = /** @class */ (function () {
-    function HueBridge(b, username) {
-        if (username === void 0) { username = null; }
+    }
+}
+class HueBridge {
+    constructor(b, username) {
         this._groupMapping = new Array();
         this._sceneMapping = new Array();
         this._lightMapping = new Array();
+        if (!username) {
+            username = null;
+        }
         this._bridgeInfo = b;
         this._username = username;
     }
     ;
-    HueBridge.prototype.getGroups = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var url;
-            var _this = this;
-            return __generator(this, function (_a) {
-                url = "http://" + this._bridgeInfo.internalipaddress + "/api/" + this._username + "/groups";
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        fetch(url)
-                            .then(function (resp) { return resp.json(); })
-                            .then(function (data) {
-                            _this._groupMapping.length = 0;
-                            for (var x in data) {
-                                var g = data[x];
-                                _this._groupMapping.push([x, g.name]);
-                            }
-                            console.log('group mapping', _this._groupMapping);
-                            resolve(data);
-                        })["catch"](function (err) { return reject(err); });
-                    })];
+    getGroups() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/groups`;
+            return new Promise((resolve, reject) => {
+                fetch(url)
+                    .then(resp => resp.json())
+                    .then(data => {
+                    this._groupMapping.length = 0;
+                    for (let x in data) {
+                        let g = data[x];
+                        this._groupMapping.push([x, g.name]);
+                    }
+                    console.log('group mapping', this._groupMapping);
+                    resolve(data);
+                })
+                    .catch(err => reject(err));
             });
         });
-    };
-    HueBridge.prototype.setGroupState = function (groupID, action) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var url = "http://" + _this._bridgeInfo.internalipaddress + "/api/" + _this._username + "/groups/" + groupID + "/action";
-                        fetch(url, {
-                            method: 'PUT',
-                            body: JSON.stringify(action),
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
-                            }
-                        })
-                            .then(function (resp) {
-                            if (resp.status >= 200 && resp.status < 300)
-                                return resp;
-                            reject(resp.statusText);
-                        })
-                            .then(function () { return resolve(); });
-                    })];
-            });
-        });
-    };
-    HueBridge.prototype.getScenes = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var url;
-            var _this = this;
-            return __generator(this, function (_a) {
-                url = "http://" + this._bridgeInfo.internalipaddress + "/api/" + this._username + "/scenes";
-                return [2 /* return */, new Promise(function (resolve, rejecct) {
-                        fetch(url)
-                            .then(function (resp) { return resp.json(); })
-                            .then(function (data) {
-                            var sceneMap = new Array();
-                            for (var id in data) {
-                                sceneMap.push([id, data[id].name]);
-                            }
-                            _this._sceneMapping = sceneMap;
-                            resolve(data);
-                        });
-                    })];
-            });
-        });
-    };
-    HueBridge.prototype.getLights = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var url = "http://" + _this._bridgeInfo.internalipaddress + "/api/" + _this._username + "/lights";
-                        fetch(url)
-                            .then(function (resp) { return resp.json(); })
-                            .then(function (data) {
-                            console.log('Lights:', data);
-                            var lightMapping = new Array();
-                            for (var key in data) {
-                                var k = parseInt(key);
-                                lightMapping.push([k, data[key].name]);
-                            }
-                            resolve(data);
-                        })["catch"](function (err) {
-                            console.log('error:', err);
-                            reject(err);
-                        });
-                    })];
-            });
-        });
-    };
-    HueBridge.prototype.getLight = function (lightID) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var url = "http://" + _this._bridgeInfo.internalipaddress + "/api/" + _this._username + "/lights/" + lightID;
-                        fetch(url)
-                            .then(function (resp) { return resp.json(); })
-                            .then(function (data) {
-                            resolve(data);
-                        });
-                    })];
-            });
-        });
-    };
-    HueBridge.prototype.tryPair = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var keepTrying = true;
-                        var retryExpiredTimer = setTimeout(function () {
-                            reject("failed to pair");
-                        }, PAIRING_TIMEOUT);
-                        var tryTimer = setInterval(function () {
-                            _this.pair()
-                                .then(function (resp) {
-                                clearTimeout(retryExpiredTimer);
-                                clearInterval(tryTimer);
-                                resolve(resp);
-                            });
-                        }, SECOND);
-                    })];
-            });
-        });
-    };
-    HueBridge.prototype.pair = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var req = { devicetype: "hue.j2i.net#browser" };
-                        var reqStr = JSON.stringify(req);
-                        var targetUrl = "http://" + _this._bridgeInfo.internalipaddress + "/api";
-                        fetch(targetUrl, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: reqStr
-                        })
-                            .then(function (resp) { return resp.json(); })
-                            .then(function (data) {
-                            if (data.length == 0)
-                                reject("no response");
-                            if (data[0].error)
-                                reject(data[0].error);
-                            if (data[0].success) {
-                                _this._username = data[0].success.username;
-                                resolve(data[0].success);
-                            }
-                        })["catch"](function (err) { return reject(err); });
-                    })];
-            });
-        });
-    };
-    return HueBridge;
-}());
-var HueDBVersion = 1;
-var HueDB = /** @class */ (function () {
-    function HueDB() {
     }
-    HueDB.prototype.ensureCreate = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var request = indexedDB.open(HUE_DATABASE, HueDBVersion);
-                        request.onerror = function (event) {
-                            reject(event.target.errorCode);
-                        };
-                        request.onsuccess = function (event) {
-                            _this._db = event.target.result;
-                            resolve(_this._db);
-                        };
-                        request.onupgradeneeded = function (event) {
-                            _this._db = event.target.result;
-                            var objectStore = _this._db.createObjectStore(HUE_BRIDGE_OBJSTORE, { keyPath: "id" });
-                        };
-                    })];
+    setGroupState(groupID, action) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/groups/${groupID}/action`;
+                fetch(url, {
+                    method: 'PUT',
+                    body: JSON.stringify(action),
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(resp => {
+                    if (resp.status >= 200 && resp.status < 300)
+                        return resp;
+                    reject(resp.statusText);
+                })
+                    .then(() => resolve());
             });
         });
-    };
-    HueDB.prototype.isInitialized = function () {
+    }
+    getScenes() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/scenes`;
+            return new Promise((resolve, rejecct) => {
+                fetch(url)
+                    .then(resp => resp.json())
+                    .then((data) => {
+                    let sceneMap = new Array();
+                    for (var id in data) {
+                        sceneMap.push([id, data[id].name]);
+                    }
+                    this._sceneMapping = sceneMap;
+                    resolve(data);
+                });
+            });
+        });
+    }
+    getLights() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/lights`;
+                fetch(url)
+                    .then(resp => resp.json())
+                    .then(data => {
+                    console.log('Lights:', data);
+                    let lightMapping = new Array();
+                    for (var key in data) {
+                        const k = parseInt(key);
+                        lightMapping.push([k, data[key].name]);
+                    }
+                    resolve(data);
+                })
+                    .catch(err => {
+                    console.log('error:', err);
+                    reject(err);
+                });
+            });
+        });
+    }
+    getLight(lightID) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/lights/${lightID}`;
+                fetch(url)
+                    .then(resp => resp.json())
+                    .then(data => {
+                    resolve(data);
+                });
+            });
+        });
+    }
+    tryPair() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                let keepTrying = true;
+                let retryExpiredTimer = setTimeout(() => {
+                    reject("failed to pair");
+                }, PAIRING_TIMEOUT);
+                let tryTimer = setInterval(() => {
+                    this.pair()
+                        .then(resp => {
+                        clearTimeout(retryExpiredTimer);
+                        clearInterval(tryTimer);
+                        resolve(resp);
+                    });
+                }, SECOND);
+            });
+        });
+    }
+    pair() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                var req = { devicetype: "hue.j2i.net#browser" };
+                var reqStr = JSON.stringify(req);
+                const targetUrl = `http://${this._bridgeInfo.internalipaddress}/api`;
+                fetch(targetUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: reqStr
+                })
+                    .then(resp => resp.json())
+                    .then(data => {
+                    if (data.length == 0)
+                        reject("no response");
+                    if (data[0].error)
+                        reject(data[0].error);
+                    if (data[0].success) {
+                        this._username = data[0].success.username;
+                        resolve(data[0].success);
+                    }
+                })
+                    .catch(err => reject(err));
+            });
+        });
+    }
+}
+const HueDBVersion = 1;
+class HueDB {
+    constructor() {
+    }
+    ensureCreate() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                var request = indexedDB.open(HUE_DATABASE, HueDBVersion);
+                request.onerror = (event) => {
+                    reject(event.target.errorCode);
+                };
+                request.onsuccess = (event) => {
+                    this._db = event.target.result;
+                    resolve(this._db);
+                };
+                request.onupgradeneeded = (event) => {
+                    this._db = event.target.result;
+                    var objectStore = this._db.createObjectStore(HUE_BRIDGE_OBJSTORE, { keyPath: "id" });
+                };
+            });
+        });
+    }
+    isInitialized() {
         return this._db != null;
-    };
-    HueDB.prototype.insertBridge = function (b) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var trans = _this._db.transaction([HUE_BRIDGE_OBJSTORE], "readwrite");
-                        trans.oncomplete = function () { return resolve("complete"); };
-                        trans.onerror = function (err) { return reject(err); };
-                        var objStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
-                        var request = objStore.add(b);
-                        request.onsuccess = function () {
-                            //
-                        };
-                    })];
+    }
+    insertBridge(b) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                let trans = this._db.transaction([HUE_BRIDGE_OBJSTORE], "readwrite");
+                trans.oncomplete = () => resolve("complete");
+                trans.onerror = (err) => reject(err);
+                let objStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
+                let request = objStore.add(b);
+                request.onsuccess = () => {
+                    //
+                };
             });
         });
-    };
-    HueDB.prototype.deleteBridge = function (b) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var trans = _this._db.transaction(["hueBridge"], "readwrite");
-                        trans.oncoplete = function () { return resolve("complete"); };
-                        trans.onerror = function (err) { return reject(err); };
-                        trans.objectStore("hueBridge")["delete"](b.id);
-                    })];
+    }
+    deleteBridge(b) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                var trans = this._db.transaction(["hueBridge"], "readwrite");
+                trans.oncoplete = () => resolve("complete");
+                trans.onerror = (err) => reject(err);
+                trans.objectStore("hueBridge").delete(b.id);
             });
         });
-    };
-    HueDB.prototype.readBridgeList = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var retVal;
-            var _this = this;
-            return __generator(this, function (_a) {
-                retVal = new Array();
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var trans = _this._db.transaction([HUE_BRIDGE_OBJSTORE]);
-                        var objectStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
-                        objectStore.openCursor().onsuccess = function (event) {
-                            var cursor = event.target.result;
-                            if (cursor) {
-                                retVal.push(cursor.value);
-                                cursor["continue"]();
-                            }
-                            else
-                                resolve(retVal);
-                        };
-                    })];
+    }
+    readBridgeList() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var retVal = new Array();
+            return new Promise((resolve, reject) => {
+                var trans = this._db.transaction([HUE_BRIDGE_OBJSTORE]);
+                var objectStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
+                objectStore.openCursor().onsuccess = (event) => {
+                    var cursor = event.target.result;
+                    if (cursor) {
+                        retVal.push(cursor.value);
+                        cursor.continue();
+                    }
+                    else
+                        resolve(retVal);
+                };
             });
         });
-    };
-    HueDB.prototype.getBridge = function (b) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        _this._db.transaction(HUE_BRIDGE_OBJSTORE).objectStore(HUE_BRIDGE_OBJSTORE).get(b.id).onsuccess = function (event) {
-                            resolve(event.target.result);
-                        };
-                    })];
+    }
+    getBridge(b) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                this._db.transaction(HUE_BRIDGE_OBJSTORE).objectStore(HUE_BRIDGE_OBJSTORE).get(b.id).onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
             });
         });
-    };
-    HueDB.prototype.updateBridge = function (b) {
-        return __awaiter(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator(this, function (_a) {
-                return [2 /* return */, new Promise(function (resolve, reject) {
-                        var objectStore = _this._db.transaction([HUE_BRIDGE_OBJSTORE], "readwrite").objectStore(HUE_BRIDGE_OBJSTORE);
-                        var request = objectStore.get(b.id);
-                        request.onerror = function (err) { return reject(err); };
-                        request.onsuccess = function (event) {
-                            var data = event.target.result;
-                            var requestUpdate = objectStore.put(b);
-                            requestUpdate.onerror = function (event) {
-                                reject(event);
-                            };
-                            requestUpdate.onsuccess = function (event) {
-                                resolve(event.target.result);
-                            };
-                        };
-                    })];
+    }
+    updateBridge(b) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve, reject) => {
+                var objectStore = this._db.transaction([HUE_BRIDGE_OBJSTORE], "readwrite").objectStore(HUE_BRIDGE_OBJSTORE);
+                var request = objectStore.get(b.id);
+                request.onerror = (err) => reject(err);
+                request.onsuccess = (event) => {
+                    var data = event.target.result;
+                    var requestUpdate = objectStore.put(b);
+                    requestUpdate.onerror = (event) => {
+                        reject(event);
+                    };
+                    requestUpdate.onsuccess = (event) => {
+                        resolve(event.target.result);
+                    };
+                };
             });
         });
-    };
-    return HueDB;
-}());
-var timeColorMapping = [
+    }
+}
+let timeColorMapping = [
     { time: 0, data: { on: true, bri: 254, hue: 0, sat: 255 } },
     { time: 2.179264, data: { on: true, bri: 254, hue: 16000, sat: 255, transitiontime: 1 } },
     { time: 7.93131, data: { on: true, bri: 254, hue: 32000, sat: 255, transitiontime: 1 } },
@@ -391,35 +323,37 @@ function play() {
     player.play();
 }
 function dance(hb) {
-    var groups = hb.getGroups()
-        .then(function (r) {
-        document.getElementById('playButton').removeAttribute('disabled');
+    let groups = hb.getGroups()
+        .then((r) => {
+        let playButton = document.getElementById('playButton');
+        if (playButton)
+            playButton.removeAttribute('disabled');
         console.log(r);
-        var lastUpdate = 0;
-        var a = {};
+        let lastUpdate = 0;
+        let a = {};
         a.on = true;
         a.bri = 0;
         a.hue = 0;
         a.sat = 16;
         hb.setGroupState("3", a);
         hb.getLights()
-            .then(function (x) { return console.log('lights', x); });
+            .then(x => console.log('lights', x));
         hb.getScenes()
-            .then(function (scenes) {
+            .then((scenes) => {
             console.log('Scenes:', scenes);
         });
         console.log('__');
         hb.getLight(3)
-            .then(function (light) {
+            .then((light) => {
             console.log('Light:', light);
         });
         var player = document.getElementById('audioPlayer');
-        var lastTimeEvent = -1;
-        var currentEventIndex = 0;
-        setInterval(function () {
+        let lastTimeEvent = -1;
+        let currentEventIndex = 0;
+        setInterval(() => {
             if (currentEventIndex < timeColorMapping.length) {
-                var ct = player.currentTime;
-                var dTime = timeColorMapping[currentEventIndex].data.transitiontime;
+                let ct = player.currentTime;
+                let dTime = timeColorMapping[currentEventIndex].data.transitiontime;
                 if (dTime == null)
                     dTime = 4;
                 dTime /= 10;
@@ -429,31 +363,33 @@ function dance(hb) {
                     hb.setGroupState("3", data);
                 }
             }
-            // console.log(player.currentTime)
+            //console.log(player.currentTime)
         }, 50);
     });
 }
 function runSplash() {
-    var targetElement = document.getElementById("splashScreen");
-    setTimeout(function () {
-        targetElement.style.opacity = "1";
+    let targetElement = document.getElementById("splashScreen");
+    if (targetElement) {
         setTimeout(function () {
-            targetElement.style.opacity = "0";
-        }, 4000);
-    }, 1000);
+            targetElement.style.opacity = "1";
+            setTimeout(function () {
+                targetElement.style.opacity = "0";
+            }, 5500);
+        }, 1000);
+    }
 }
 function tizenInit() {
     runSplash();
     registerKeyListener();
-    var db = new HueDB();
+    let db = new HueDB();
     db.ensureCreate()
-        .then(function () {
+        .then(() => {
         db.readBridgeList()
-            .then(function (bridgeList) {
+            .then((bridgeList) => {
             console.log('Bridge List', bridgeList);
-            var finder = new HueFinder();
+            let finder = new HueFinder();
             finder.find()
-                .then(function (discoveredBridgeList) {
+                .then((discoveredBridgeList) => {
                 console.log('Discovered Bridge List', discoveredBridgeList);
             });
         });
@@ -466,38 +402,38 @@ else {
     window.onload = runSplash;
 }
 function main() {
-    // debugger;
-    var lastUsername = localStorage.getItem("lastUsername");
-    var db = new HueDB();
+    //debugger;
+    let lastUsername = localStorage.getItem("lastUsername");
+    let db = new HueDB();
     db.ensureCreate()
-        .then(function () {
+        .then(() => {
         db.readBridgeList()
-            .then(function (bl_db) {
+            .then((bl_db) => {
             console.log('bridge list:', bl_db);
             var hf = new HueFinder();
             hf.find()
-                .then(function (bl_fn) {
+                .then(bl_fn => {
                 var chosenBridge = null;
                 if (bl_db) {
-                    bl_fn.forEach(function (b) {
-                        var elem = bl_db.find(function (x) { return x.id == b.id; });
+                    bl_fn.forEach((b) => {
+                        var elem = bl_db.find((x) => x.id == b.id);
                         if (elem && !chosenBridge) {
                             chosenBridge = b;
                             chosenBridge.userInfo = elem.userInfo;
-                            var hueBridge = new HueBridge(b, elem.userInfo.username);
+                            let hueBridge = new HueBridge(b, elem.userInfo.username);
                             dance(hueBridge);
                         }
                     });
                 }
-                if (!chosenBridge) {
+                if (chosenBridge != null) {
                     if (bl_fn.length > 0) {
                         chosenBridge = bl_fn[0];
-                        var b = new HueBridge(chosenBridge);
+                        let b = new HueBridge(chosenBridge);
                         b.tryPair()
-                            .then(function (b) {
+                            .then((b) => {
                             chosenBridge.userInfo = b;
                             db.insertBridge(chosenBridge);
-                            var hueBridge = new HueBridge(chosenBridge, b.username);
+                            let hueBridge = new HueBridge(chosenBridge, b.username);
                         });
                     }
                 }
@@ -506,15 +442,16 @@ function main() {
     });
     var hf = new HueFinder();
     hf.find()
-        .then(function (bl) {
+        .then(bl => {
         console.log(bl);
-        var hb = new HueBridge(bl[0], lastUsername);
+        let hb = new HueBridge(bl[0], lastUsername);
         if (!lastUsername) {
             hb.tryPair()
-                .then(function (resp) {
+                .then(resp => {
                 console.log(resp);
                 localStorage.setItem("lastUsername", resp.username);
-            })["catch"](function (e) {
+            })
+                .catch((e) => {
                 console.log('pairing failed', e);
             });
         }
@@ -523,17 +460,17 @@ function main() {
 function registerKeyListener() {
     document.addEventListener('keydown', function (e) {
         switch (e.keyCode) {
-            case 37: // LEFT arrow
+            case 37: //LEFT arrow
                 break;
-            case 38: // UP arrow
+            case 38: //UP arrow
                 break;
-            case 39: // RIGHT arrow
+            case 39: //RIGHT arrow
                 break;
-            case 40: // DOWN arrow
+            case 40: //DOWN arrow
                 break;
-            case 13: // OK button
+            case 13: //OK button
                 break;
-            case 10009: // RETURN button
+            case 10009: //RETURN button
                 window["tizen"].application.getCurrentApplication().exit();
                 break;
             default:

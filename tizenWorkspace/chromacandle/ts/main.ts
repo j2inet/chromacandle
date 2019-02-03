@@ -1,21 +1,23 @@
-var checkTime;
 
-var ViewStates = Object.freeze({
-	SelectBridge:"SelectBridge",
-	ControlLights:"ControlLights"
-});
+
+enum ViewStates {
+	SelectBridge,
+	ControlLights
+};
+
 //Initialize function
 var init = function () {
-	var hdb = new HueDB();
-	var hueFinder = new HueFinder();
-	HueFinder.fin
-	var targetElement = document.getElementById("splashScreen");
-	setTimeout(function(){
-		targetElement.style.opacity = 1;	
+	let hdb = new HueDB();
+	let hueFinder = new HueFinder();
+	let targetElement = document.getElementById("splashScreen");
+	if(targetElement) {
 		setTimeout(function(){
-			targetElement.style.opacity=0;
-		},4000)
-	}, 1000);
+			targetElement!.style.opacity = '1';	
+			setTimeout(function(){
+				targetElement!.style.opacity='0';
+			},4000)
+		}, 1000);
+	}
 	
     // TODO:: Do your initialization job
     console.log('init() called');
@@ -54,24 +56,7 @@ var init = function () {
 window.onload = init;
 
 
-function goToState(var state) {
+function goToState(state:ViewStates) {
 	
 }
 
-function startTime() {
-    var today = new Date();
-    var h = today.getHours();
-    var m = today.getMinutes();
-    var s = today.getSeconds();
-    m = checkTime(m);
-    s = checkTime(s);
-    document.getElementById('divbutton1').innerHTML='Current time: ' + h + ':' + m + ':' + s;
-    setTimeout(startTime, 10);
-}
-
-function checkTime(i) {
-    if (i < 10) {
-        i='0' + i;
-    }
-    return i;
-}
