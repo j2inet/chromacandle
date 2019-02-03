@@ -1,5 +1,9 @@
 var checkTime;
 
+var ViewStates = Object.freeze({
+	SelectBridge:"SelectBridge",
+	ControlLights:"ControlLights"
+});
 //Initialize function
 var init = function () {
 	var hdb = new HueDB();
@@ -48,6 +52,9 @@ var init = function () {
 };
 // window.onload can work without <body onload="">
 window.onload = init;
+
+
+function goToState()
 
 function startTime() {
     var today = new Date();

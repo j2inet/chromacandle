@@ -45,7 +45,7 @@ var HueFinder = /** @class */ (function () {
     HueFinder.prototype.find = function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         fetch(DISCOVERY_URL)
                             .then(function (resp) { return resp.json(); })
                             .then(function (bridgeList) { resolve(bridgeList); });
@@ -71,7 +71,7 @@ var HueBridge = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_a) {
                 url = "http://" + this._bridgeInfo.internalipaddress + "/api/" + this._username + "/groups";
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         fetch(url)
                             .then(function (resp) { return resp.json(); })
                             .then(function (data) {
@@ -91,7 +91,7 @@ var HueBridge = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var url = "http://" + _this._bridgeInfo.internalipaddress + "/api/" + _this._username + "/groups/" + groupID + "/action";
                         fetch(url, {
                             method: 'PUT',
@@ -117,7 +117,7 @@ var HueBridge = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_a) {
                 url = "http://" + this._bridgeInfo.internalipaddress + "/api/" + this._username + "/scenes";
-                return [2 /*return*/, new Promise(function (resolve, rejecct) {
+                return [2 /* return */, new Promise(function (resolve, rejecct) {
                         fetch(url)
                             .then(function (resp) { return resp.json(); })
                             .then(function (data) {
@@ -136,7 +136,7 @@ var HueBridge = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var url = "http://" + _this._bridgeInfo.internalipaddress + "/api/" + _this._username + "/lights";
                         fetch(url)
                             .then(function (resp) { return resp.json(); })
@@ -160,7 +160,7 @@ var HueBridge = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var url = "http://" + _this._bridgeInfo.internalipaddress + "/api/" + _this._username + "/lights/" + lightID;
                         fetch(url)
                             .then(function (resp) { return resp.json(); })
@@ -175,7 +175,7 @@ var HueBridge = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var keepTrying = true;
                         var retryExpiredTimer = setTimeout(function () {
                             reject("failed to pair");
@@ -196,7 +196,7 @@ var HueBridge = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var req = { devicetype: "hue.j2i.net#browser" };
                         var reqStr = JSON.stringify(req);
                         var targetUrl = "http://" + _this._bridgeInfo.internalipaddress + "/api";
@@ -230,7 +230,7 @@ var HueDB = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var request = indexedDB.open(HUE_DATABASE, HueDBVersion);
                         request.onerror = function (event) {
                             reject(event.target.errorCode);
@@ -254,7 +254,7 @@ var HueDB = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var trans = _this._db.transaction([HUE_BRIDGE_OBJSTORE], "readwrite");
                         trans.oncomplete = function () { return resolve("complete"); };
                         trans.onerror = function (err) { return reject(err); };
@@ -271,7 +271,7 @@ var HueDB = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var trans = _this._db.transaction(["hueBridge"], "readwrite");
                         trans.oncoplete = function () { return resolve("complete"); };
                         trans.onerror = function (err) { return reject(err); };
@@ -286,7 +286,7 @@ var HueDB = /** @class */ (function () {
             var _this = this;
             return __generator(this, function (_a) {
                 retVal = new Array();
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var trans = _this._db.transaction([HUE_BRIDGE_OBJSTORE]);
                         var objectStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
                         objectStore.openCursor().onsuccess = function (event) {
@@ -306,7 +306,7 @@ var HueDB = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         _this._db.transaction(HUE_BRIDGE_OBJSTORE).objectStore(HUE_BRIDGE_OBJSTORE).get(b.id).onsuccess = function (event) {
                             resolve(event.target.result);
                         };
@@ -318,7 +318,7 @@ var HueDB = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
+                return [2 /* return */, new Promise(function (resolve, reject) {
                         var objectStore = _this._db.transaction([HUE_BRIDGE_OBJSTORE], "readwrite").objectStore(HUE_BRIDGE_OBJSTORE);
                         var request = objectStore.get(b.id);
                         request.onerror = function (err) { return reject(err); };
@@ -429,7 +429,7 @@ function dance(hb) {
                     hb.setGroupState("3", data);
                 }
             }
-            //console.log(player.currentTime)
+            // console.log(player.currentTime)
         }, 50);
     });
 }
@@ -466,7 +466,7 @@ else {
     window.onload = runSplash;
 }
 function main() {
-    //debugger;
+    // debugger;
     var lastUsername = localStorage.getItem("lastUsername");
     var db = new HueDB();
     db.ensureCreate()
@@ -523,17 +523,17 @@ function main() {
 function registerKeyListener() {
     document.addEventListener('keydown', function (e) {
         switch (e.keyCode) {
-            case 37: //LEFT arrow
+            case 37: // LEFT arrow
                 break;
-            case 38: //UP arrow
+            case 38: // UP arrow
                 break;
-            case 39: //RIGHT arrow
+            case 39: // RIGHT arrow
                 break;
-            case 40: //DOWN arrow
+            case 40: // DOWN arrow
                 break;
-            case 13: //OK button
+            case 13: // OK button
                 break;
-            case 10009: //RETURN button
+            case 10009: // RETURN button
                 window["tizen"].application.getCurrentApplication().exit();
                 break;
             default:
