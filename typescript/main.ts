@@ -57,18 +57,46 @@ function selectBridgeKeyHandler(e:any) {
 }
 
 
+function bridgeClick(e:any) { 
+	console.log(e);
+	console.log('target', e.currentTarget)
+	const  stringIndex = $(e.currentTarget).attr('index');
+	var numberIndex:number = -1;
+	if(stringIndex) {
+		numberIndex = parseInt(stringIndex);
+	}
+	if(numberIndex>-1) {
+		selectedBridgeIndex = numberIndex;
+		highlightSelectedBridge();
+	}
+}
+
+function bridgeConnect(e:any) { 
+	const  stringIndex = $(e.currentTarget).attr('index');
+	var numberIndex:number = -1;
+	if(stringIndex) {
+		numberIndex = parseInt(stringIndex);
+	}	
+	console.log('connect', numberIndex);
+}
 
 function promptBridgeSelection() { 
 
 	goToState(ViewStates.SelectBridge);
 	$('#bridgeListElement').empty();
+	var indx = 0;
 	for(let x:number = 0;x<2;++x)
 	for(let i:number = 0;i<discoveryBridgeList.length;++i) {
 		var bridge = discoveryBridgeList[i];
 		let structure = $('#palette').find('.bridgeButton').clone();
+		$(structure).click(bridgeClick);
+		$(structure).find('.bridgeConnectButton').click(bridgeConnect);
+		$(structure).attr('index', indx);
+		$(structure).find('.bridgeConnectButton').attr('index', indx);
 		$(structure).find('.bridgeAddress').text(bridge.internalipaddress);
 		$(structure).find('.bridgeId').text(bridge.id);
 		$('#bridgeListElement').append(structure);
+		++indx;
 	}
 	selectedBridgeIndex = 0;
 	highlightSelectedBridge();
