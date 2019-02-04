@@ -27,7 +27,7 @@ class HueFinder {
 	}
 
 	async find() : Promise<Array<IBridgeInfo>> {
-		return new Promise((resolve,reject)=> {
+		return new Promise<Array<IBridgeInfo>>((resolve,reject)=> {
 			fetch(DISCOVERY_URL)
 			.then(resp=>resp.json())
 			.then(bridgeList=> {resolve(bridgeList);});
@@ -202,7 +202,7 @@ class HueBridge {
 	}
 
 	async getLight(lightID:string|number): Promise<IBulbState> { 
-		return new Promise((resolve, reject) => { 
+		return new Promise<IBulbState>((resolve, reject) => { 
 			const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/lights/${lightID}`;
 			fetch(url)
 			.then(resp=>resp.json())
@@ -232,7 +232,7 @@ class HueBridge {
 	}
 
 	private async pair() :Promise<IUsernameResponse>{
-		return new Promise((resolve, reject)=> {
+		return new Promise<IUsernameResponse>((resolve, reject)=> {
 			var req = { devicetype: "hue.j2i.net#browser" };
    			var reqStr = JSON.stringify(req);
 			const targetUrl = `http://${this._bridgeInfo.internalipaddress}/api`
@@ -314,7 +314,7 @@ class HueDB {
 
 	async readBridgeList():Promise<Array<IBridgeInfo>> {
 		var retVal = new Array<IBridgeInfo>();
-		return new Promise((resolve, reject)=> {
+		return new Promise<Array<IBridgeInfo>>((resolve, reject)=> {
 			var trans = this._db.transaction([HUE_BRIDGE_OBJSTORE]);
 			var objectStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
 			objectStore.openCursor().onsuccess = (event:any) => {
@@ -442,7 +442,7 @@ function dance(hb:HueBridge) {
 		hb.getLight(3)
 		.then((light)=> {
 			console.log('Light:', light);
-		})
+		});
 
 		var player:any = document.getElementById('audioPlayer');
 		let lastTimeEvent = -1;
@@ -455,7 +455,7 @@ function dance(hb:HueBridge) {
 					dTime = 4;
 				dTime/=10;
 				if(ct>=timeColorMapping[currentEventIndex].time - dTime/2) {
-					var data:unknown;
+					var data:any;
 					data = timeColorMapping[currentEventIndex++].data ;
 					hb.setGroupState("3",data  as ILightState);
 				}
@@ -465,9 +465,6 @@ function dance(hb:HueBridge) {
 	});
 }
 
-
-
-
 function runSplash() { 
 	let targetElement = document.getElementById("splashScreen");
 	if(targetElement) {
@@ -475,7 +472,7 @@ function runSplash() {
 			targetElement!.style.opacity = "1";	
 			setTimeout(function(){
 				targetElement!.style.opacity="0";
-			},5500)
+			},5500);
 		}, 1000);
 	}
 }
@@ -495,14 +492,14 @@ function tizenInit() {
 				console.log('Discovered Bridge List', discoveredBridgeList);
 			});
 		})
-	})
+	});
 }
 if(window.hasOwnProperty("tizen")) {
 	window.onload = tizenInit;
 } else {
 	window.onload = runSplash;
 }
-function main():void  { 
+function _main():void  { 
 	//debugger;
 	let lastUsername:string|null = localStorage.getItem("lastUsername");
 	let db = new HueDB();
@@ -535,7 +532,7 @@ function main():void  {
 							chosenBridge!.userInfo = b;
 							db.insertBridge(chosenBridge!);
 							let hueBridge = new HueBridge(chosenBridge!, b.username);
-						})
+						});
 					}
 				}
 			});
@@ -575,7 +572,7 @@ function registerKeyListener() {
     	case 13: //OK button
     		break;
     	case 10009: //RETURN button
-			window["tizen"].application.getCurrentApplication().exit();
+			window.tizen.application.getCurrentApplication().exit();
     		break;
     	default:
     		console.log('Key code : ' + e.keyCode);

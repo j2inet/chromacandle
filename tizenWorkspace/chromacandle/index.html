@@ -7,26 +7,34 @@
 
     <title>Tizen Web IDE - Tizen - Samsung Tizen TV basic Application</title>
 
-    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
+	<script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/hue.js"></script>
-    <script_ src="js/main.js"></script>
+    <script src="js/main.js"></script>
 </head>
 
 <body>
- 	<div id="splashScreen" class="splash">
-	 	<div id="selectBridgeScreen" class="selectBridge">
-	 	</div>
-	 	
-	 	<div id="pairScreen" class="pair">
-	 	
-	 	</div>
- 	
- 	</div>
+	<div id="rootVisual">
+		<div id="splashScreen" class="splash">
+			<div id="selectBridgeScreen" class="selectBridge"></div>
+			
+			<div id="pairScreen" class="pair"></div> 	
+		</div>
+		<div id="bridgeSelection">
+			<h2 class="rainboxText">Select a Hue Bridge</h2>
+			<div id="bridgeListElement"></div>
+		</div>
+	</div>
  	
  	<div class="palette" id="palette">
- 	<div class="bridge">
- 		<img src="./images/hueIcons/devicesBridgesV2.svg" />
- 	</div>
+    <div class="bridgeButton">
+		<div class="bridge">
+
+			<img class="bridgeImage"  />
+			<div class="bridgeAddress">test test test</div>
+			<div class="bridgeId">test 2 test 2 test 2</div>
+		</div>
+	</div>
  	</div>
  	
 </body>

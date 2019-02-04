@@ -1,6 +1,13 @@
 ///  https://www.tizen.org/ko/tv/web_device_api/application?langredirect=1#ApplicationManager
 
-declare	interface Window {  tizen:any}
+declare	interface Window {  tizen:tizenInterface}
+declare var tizen:tizenInterface;
+
+interface tizenInterface {
+    application:ApplicationManager;
+}
+
+
 
 type ApplicationId = string;
 type ApplicationContextId = string;
@@ -41,17 +48,17 @@ interface ApplicationControlData {
 
 interface ApplicationContextArraySuccessCallback {
     onsuccess( contexts:Array<ApplicationContext>):void;
-  }
+}
 
-  interface ApplicationInformationArraySuccessCallback {
+interface ApplicationInformationArraySuccessCallback {
     onsuccess(informationArray:Array<ApplicationInformation>):void;
-  }
+}
 
-  interface ApplicationInformationEventCallback {
+interface ApplicationInformationEventCallback {
     oninstalled(info:ApplicationInformation):void;
     onupdated(info:ApplicationInformation):void;
     onuninstalled(id:ApplicationId):void;
-  }
+}
 
 interface ApplicationInformation {
 
@@ -64,11 +71,11 @@ interface ApplicationInformation {
     installDate:Date;
     size:number;
     packageId:PackageId;
-  }
+}
 
 interface FindAppControlSuccessCallback {
     onsuccess( informationArray:Array<ApplicationInformation>, appControl:ApplicationControl):void;
-  }
+}
 
 
 interface ApplicationControl {
@@ -78,7 +85,7 @@ interface ApplicationControl {
     category:string|null;
     data:Array<ApplicationControlData>;
     launchMode:ApplicationControlLaunchMode;
-  }
+}
 
 interface RequestedApplicationControl {
     readonly  appControl:ApplicationControl;
@@ -117,15 +124,60 @@ interface ApplicationManager {
     getAppContext(contextId:string):ApplicationContext;
     getAppsInfo(successCallback:ApplicationInformationArraySuccessCallback,
                      errorCallback?:ErrorCallback):void;
-    getAppInfo(id?:string /*ApplicationId*/):ApplicationInformation;
-    getAppCerts(id?:string /*ApplicationId*/):Array<ApplicationCertificate>;
-    getAppSharedURI(id?:string /*ApplicationId*/):string;
-    getAppMetaData(id?:string /*ApplicationId*/):Array<ApplicationMetaData>;
+    getAppInfo(id?:ApplicationId ):ApplicationInformation;
+    getAppCerts(id?:ApplicationId ):Array<ApplicationCertificate>;
+    getAppSharedURI(id?:ApplicationId ):string;
+    getAppMetaData(id?:ApplicationId ):Array<ApplicationMetaData>;
     addAppInfoEventListener(eventCallback:ApplicationInformationEventCallback):number;
     removeAppInfoEventListener( watchId:number):void ;    
 }
 
-interface tizenInterface {
-    application:ApplicationManager;
+//------
+
+type double = number;
+type long = number;
+type DOMString = string;
+type ulong = number;
+
+declare enum PowerResource    
+{ 
+    SCREEN = "SCREEN", 
+    CPU = "CPU" 
 }
-declare var tizen:tizenInterface;
+
+
+declare enum PowerScreenState { 
+    SCREEN_OFF = "SCREEN_OFF", 
+    SCREEN_DIM = "SCREEN_DIM", 
+    SCREEN_NORMAL = "SCREEN_NORMAL", 
+    SCREEN_BRIGHT = "SCREEN_BRIGHT" 
+}
+
+declare enum PowerCpuState { 
+    CPU_AWAKE = "CPU_AWAKE" 
+}
+
+type PowerState = PowerScreenState|PowerCpuState;
+
+
+interface PowerManagerObject {
+    power:PowerManager;
+}
+
+interface PowerManager {
+    request( resource:PowerResource, state:PowerState):void;
+    release(resource:PowerResource):void;
+    setScreenStateChangeListener(listener:ScreenStateChangeCallback):void;
+    unsetScreenStateChangeListener():void;
+    getScreenBrightness():double;
+    setScreenBrightness(brightness:double) :void;
+     isScreenOn():boolean;
+    restoreScreenBrightness():void;
+    turnScreenOn():void;
+    turnScreenOff():void;
+}
+
+interface ScreenStateChangeCallback {
+    onchanged(previousState:PowerScreenState, changedState:PowerScreenState):void;
+}
+

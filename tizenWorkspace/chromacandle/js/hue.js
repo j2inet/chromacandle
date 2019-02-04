@@ -401,7 +401,7 @@ if (window.hasOwnProperty("tizen")) {
 else {
     window.onload = runSplash;
 }
-function main() {
+function _main() {
     //debugger;
     let lastUsername = localStorage.getItem("lastUsername");
     let db = new HueDB();
@@ -471,7 +471,7 @@ function registerKeyListener() {
             case 13: //OK button
                 break;
             case 10009: //RETURN button
-                window["tizen"].application.getCurrentApplication().exit();
+                window.tizen.application.getCurrentApplication().exit();
                 break;
             default:
                 console.log('Key code : ' + e.keyCode);
