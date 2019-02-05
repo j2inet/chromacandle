@@ -26,7 +26,8 @@ class PairScreenModule implements ScreenModule {
 
     setElement(element: Element) {
         this._parentElement = element;
-    }
+	}
+	
     setBridge(bridge: HueBridge): void {
         this._bridge = bridge;
     }
@@ -44,8 +45,11 @@ class PairScreenModule implements ScreenModule {
 
     activate(): void {
         this.setState(PairingScreenStates.Pairing);
-        this.startPairing();
-    }
+		this.startPairing();
+		$(this._parentElement!).find('.yesButton').addClass('selectedButton');
+		$(this._parentElement!).find('.noButton').removeClass('selectedButton');
+	}
+	
     deactivate(): void {
         if (this._pairTimer != 0) {
             clearInterval(this._pairTimer);
@@ -89,18 +93,24 @@ class PairScreenModule implements ScreenModule {
         switch (e.keyCode) {
             case 37: //LEFT arrow
                 $(this._parentElement!).find('.yesButton').addClass('selectedButton');
-                $(this._parentElement!).find('.noButton').removeClass('selectedButton');
+				$(this._parentElement!).find('.noButton').removeClass('selectedButton');
+				this._isRetryRequested = true;
+				return true;
                 break;
             case 39: //RIGHT arrow
                 $(this._parentElement!).find('.yesButton').removeClass('selectedButton');
-                $(this._parentElement!).find('.noButton').addClass('selectedButton');
+				$(this._parentElement!).find('.noButton').addClass('selectedButton');
+				this._isRetryRequested = false;
+				return true;
                 break;
             case 13: //OK button
                 break;
 
-        }
+		}
+		return false;
     }
 
+	private _isRetryRequested:boolean = false;
     private _remainingPairTime = 0;
     private _bridge: HueBridge|null;
     private _pairTimer = 0;
@@ -120,6 +130,7 @@ var selectedBridge:IBridgeInfo;
 var selectedBridgeIndex = 0;
 
 var smPair: PairScreenModule = new PairScreenModule();
+var viewState:ViewStates = ViewStates.SplashScreen;
 
 type keyArgs = any;
 
@@ -224,6 +235,20 @@ function promptBridgeSelection() {
 
 function addKeyListener() {
     document.addEventListener('keydown', function(e) {
+		switch(viewState) {
+			case ViewStates.SplashScreen:
+			break;
+			case ViewStates.PairBridge:
+			smPair.keyHandler(e);
+			break;
+			case ViewStates.ControlLights:
+			break;
+			case ViewStates.SelectBridge:
+			selectBridgeKeyHandler(e);
+			break;
+			default:
+			break;
+		}
     	switch(e.keyCode){
 			/*
     	case 37: //LEFT arrow
@@ -280,6 +305,7 @@ window.onload = main;
 function goToState(state:ViewStates) {
 	let rootVisual = document.getElementById('rootVisual');
 	var newClass:string;
+	viewState = state;
 	switch(state) {
 		case ViewStates.SplashScreen: newClass="splashScreen"		; break;
 		case ViewStates.ControlLights: newClass="controlLisghts";	break;

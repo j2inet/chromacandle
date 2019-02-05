@@ -4,11 +4,11 @@
 
 body {
     margin: 50px auto;
+    font-size: 30pt;
     color:white;
     background-color:black;
     width:1920px;
     height:1080px;
-    
 }
 
 .palette { 
