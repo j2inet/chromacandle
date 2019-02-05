@@ -12,7 +12,7 @@ const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const HUE_DATABASE = "hueDB";
 const HUE_BRIDGE_OBJSTORE = "bridge";
-const PAIRING_TIMEOUT = 3 * MINUTE;
+const PAIRING_TIMEOUT = 0.5 * MINUTE;
 class HueFinder {
     constructor() {
     }
@@ -31,6 +31,8 @@ class HueBridge {
         this._groupMapping = new Array();
         this._sceneMapping = new Array();
         this._lightMapping = new Array();
+        this._tryTimer = 0;
+        this._retryTimer = 0;
         if (!username) {
             username = null;
         }
@@ -133,19 +135,28 @@ class HueBridge {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
                 let keepTrying = true;
-                let retryExpiredTimer = setTimeout(() => {
+                this._retryTimer = setTimeout(() => {
                     reject("failed to pair");
                 }, PAIRING_TIMEOUT);
-                let tryTimer = setInterval(() => {
+                this._tryTimer = setInterval(() => {
                     this.pair()
                         .then(resp => {
-                        clearTimeout(retryExpiredTimer);
-                        clearInterval(tryTimer);
+                        this.cancelPair();
                         resolve(resp);
                     });
                 }, SECOND);
             });
         });
+    }
+    cancelPair() {
+        if (this._tryTimer) {
+            clearInterval(this._tryTimer);
+            this._tryTimer = 0;
+        }
+        if (this._retryTimer) {
+            clearTimeout(this._retryTimer);
+            this._retryTimer = 0;
+        }
     }
     pair() {
         return __awaiter(this, void 0, void 0, function* () {

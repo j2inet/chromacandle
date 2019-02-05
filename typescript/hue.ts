@@ -5,7 +5,7 @@ const MINUTE = 60*SECOND;
 const HUE_DATABASE="hueDB";
 const HUE_BRIDGE_OBJSTORE = "bridge";
 
-const PAIRING_TIMEOUT = 3*MINUTE;
+const PAIRING_TIMEOUT = 0.5*MINUTE;
 
 interface IUsernameResponse {
 	username:string;
@@ -217,19 +217,29 @@ class HueBridge {
 		return new Promise<IUsernameResponse>((resolve, reject) => 
 		{
 			let keepTrying = true;
-			let retryExpiredTimer = setTimeout(()=>{
+			this._retryTimer = setTimeout(()=>{
 				reject("failed to pair");
 			}, PAIRING_TIMEOUT);
-			let tryTimer = setInterval(()=>{
+			this._tryTimer = setInterval(()=>{
 				this.pair()
-				.then(resp=>{
-					clearTimeout(retryExpiredTimer);
-					clearInterval(tryTimer);
+                    .then(resp => {
+                    this.cancelPair();
 					resolve(resp);
 				});
 			}, SECOND);
 		});
-	}
+    }
+
+    cancelPair() {
+        if (this._tryTimer) {
+            clearInterval(this._tryTimer);
+            this._tryTimer = 0;
+        }
+        if (this._retryTimer) {
+            clearTimeout(this._retryTimer);
+            this._retryTimer = 0;
+        }
+    }
 
 	private async pair() :Promise<IUsernameResponse>{
 		return new Promise<IUsernameResponse>((resolve, reject)=> {
@@ -259,7 +269,9 @@ class HueBridge {
 	_username:string|null;
 	_groupMapping:Array<[string, string]> = new Array<[string, string]>();
 	_sceneMapping:Array<[string, string]> = new Array<[string, string]>();
-	_lightMapping:Array<[Number, string]> = new Array<[number, string]>();
+    _lightMapping: Array<[Number, string]> = new Array<[number, string]>();
+    _tryTimer = 0;
+    _retryTimer = 0;
 }
 
 

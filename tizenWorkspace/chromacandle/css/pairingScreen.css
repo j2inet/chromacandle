@@ -1,0 +1,32 @@
+#pairBridge > div {
+    opacity:0;
+    display:none;
+    transition: opacity 1s;
+}
+
+#pairBridge.PairScreen-Waiting > .waiting {
+    opacity: 1;
+    display:block;
+}
+
+#pairBridge.PairingScreen-Pairing > #pairingMessage {
+    opacity: 1;
+    display: block;
+}
+
+#pairBridge.PairingScreen-Success > #successMessage {
+    opacity: 1;
+    display: block;
+}
+
+#pairBridge.PairingScreen-Failed > #failedMessage {
+    opacity: 1;
+    display: block;
+}
+
+
+
+
+
+
+

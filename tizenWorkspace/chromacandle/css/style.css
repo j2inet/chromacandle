@@ -16,14 +16,35 @@ body {
     
 }
 
+.dialogButton { 
+    /*height:20px;*/
+    width:300px;
+    text-align:center;
+    border-radius: 20px;
+    border: 2px solid white;
+    font-size:40pt;    
+}
+
+.selectedButton {
+    background-color:#808080;
+}
+
 .bridge {
     display: grid;
     grid-template-columns: 200px 300px 100px;
-    grid-template-rows:  32px 32px 32px 32px;
+    grid-template-rows: 32px 32px 32px 32px;
 }
 
 .bridgeButton {
     padding:20px;
+}
+
+
+.bridgePromptImage {
+    content: url(../images/hueIcons/devicesBridgesV2_white.svg);
+    width: 256px;
+    height: 256px;
+    background-color: white;
 }
 
 
@@ -90,9 +111,16 @@ body {
     opacity: 1;
 }
 
+#rootVisual.pairBridge > #pairBridge {
+    display:block;
+    opacity:1;
+}
 
+.connectCountdown {
+    font-size:20pt;
+}
 .rainboxText {
-    color:transparent;
+    color: transparent;
     background-image: url(../images/flame.jpg);
     background-repeat: repeat-x;
     background-clip: text;
@@ -178,10 +206,10 @@ footer p {
 
 @keyframes text-animation {
     0% {
-        background-position: left 0px top -200px;        
+        background-position: left 0px top -300px;        
     }
     100% { 
-        background-position: left 1920px top -200px;
+        background-position: left 1920px top -250px;
     }
 }
 

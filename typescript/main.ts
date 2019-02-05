@@ -4,8 +4,111 @@
 enum ViewStates {
 	SplashScreen,
 	SelectBridge,
-	ControlLights
+    ControlLights,
+    PairBridge
 };
+
+
+enum PairingScreenStates {
+    Waiting = "Waiting",
+    Pairing = "Pairing",
+    Success = "Success",
+    Failed = "Failed"
+}
+
+class PairScreenModule implements ScreenModule {
+
+    constructor() {
+        this._bridge = null;
+        this._state = PairingScreenStates.Waiting;
+        this._parentElement = null;
+    }
+
+    setElement(element: Element) {
+        this._parentElement = element;
+    }
+    setBridge(bridge: HueBridge): void {
+        this._bridge = bridge;
+    }
+
+    setState(state: PairingScreenStates): void {
+        this._state = state;
+        $(this._parentElement!)
+            .removeClass('PairScreen-Waiting')
+            .removeClass('PairingScreen-Pairing')
+            .removeClass('PairingScreen-Success')
+            .removeClass('PairingScreen-Failed');
+        $(this._parentElement!)
+            .addClass(`PairingScreen-${state}`);
+    }
+
+    activate(): void {
+        this.setState(PairingScreenStates.Pairing);
+        this.startPairing();
+    }
+    deactivate(): void {
+        if (this._pairTimer != 0) {
+            clearInterval(this._pairTimer);
+        }
+    }
+
+    startPairing(): Promise<HueBridge> {
+        return new Promise<HueBridge>((resolve, reject) => {
+            if (this._bridge == null) {
+                reject();
+                return;
+            }
+            this._remainingPairTime = PAIRING_TIMEOUT / SECOND;
+            this._bridge!.tryPair()
+                .then((userNameResponse) => {
+                    clearInterval(this._pairTimer);
+                    this._pairTimer = 0;
+                    resolve(this._bridge!);
+                    this.setState(PairingScreenStates.Success);
+                    return;
+                })
+                .catch(() => {
+                    this.setState(PairingScreenStates.Failed);
+                });
+            this._pairTimer = setInterval(() => {
+                if (this._remainingPairTime > 0) {
+                    --this._remainingPairTime;
+                    $('.connectCountdown').text(this._remainingPairTime);
+                } else {
+                    reject('timeout');
+                    this.setState(PairingScreenStates.Failed);
+                    clearInterval(this._pairTimer);
+                    this._pairTimer = 0;
+                }
+            }, 1000);
+        });
+    }
+
+
+    keyHandler(e: keyArgs): boolean {
+        switch (e.keyCode) {
+            case 37: //LEFT arrow
+                $(this._parentElement!).find('.yesButton').addClass('selectedButton');
+                $(this._parentElement!).find('.noButton').removeClass('selectedButton');
+                break;
+            case 39: //RIGHT arrow
+                $(this._parentElement!).find('.yesButton').removeClass('selectedButton');
+                $(this._parentElement!).find('.noButton').addClass('selectedButton');
+                break;
+            case 13: //OK button
+                break;
+
+        }
+    }
+
+    private _remainingPairTime = 0;
+    private _bridge: HueBridge|null;
+    private _pairTimer = 0;
+    private _state: PairingScreenStates;
+    private _parentElement: Element|null;
+}
+
+
 
 
 var hdb = new HueDB();
@@ -15,6 +118,16 @@ var discoveryBridgeList:Array<IBridgeInfo>;
 var rememberedBridgeList:Array<IBridgeInfo>;
 var selectedBridge:IBridgeInfo;
 var selectedBridgeIndex = 0;
+
+var smPair: PairScreenModule = new PairScreenModule();
+
+type keyArgs = any;
+
+interface ScreenModule {
+    keyHandler(e: keyArgs): boolean;
+    activate(): void;
+    deactivate(): void;
+}
 
 
 function activate():void {
@@ -44,11 +157,12 @@ function selectBridgeKeyHandler(e:any) {
 			highlightSelectedBridge();
     		break;
 		case 40: //DOWN arrow
-			//if(selectedBridgeIndex < discoveryBridgeList.length-1)
+			if(selectedBridgeIndex < discoveryBridgeList.length-1)
 				++selectedBridgeIndex
 			highlightSelectedBridge();
     		break;
-    	case 13: //OK button
+        case 13: //OK button
+            bridgeConnect(discoveryBridgeList[selectedBridgeIndex]);
     		break;
     	default:
     		console.log('Key code : ' + e.keyCode);
@@ -71,26 +185,32 @@ function bridgeClick(e:any) {
 	}
 }
 
-function bridgeConnect(e:any) { 
+function bridgeConnectClick(e:any) { 
 	const  stringIndex = $(e.currentTarget).attr('index');
 	var numberIndex:number = -1;
 	if(stringIndex) {
 		numberIndex = parseInt(stringIndex);
 	}	
-	console.log('connect', numberIndex);
+    console.log('connect', numberIndex);
+    bridgeConnect(discoveryBridgeList[numberIndex]);
+}
+
+function bridgeConnect(bridgeInfo: IBridgeInfo) {
+    smPair.setBridge(new HueBridge(bridgeInfo));
+    smPair.activate();
+    goToState(ViewStates.PairBridge);
 }
 
 function promptBridgeSelection() { 
 
 	goToState(ViewStates.SelectBridge);
 	$('#bridgeListElement').empty();
-	var indx = 0;
-	for(let x:number = 0;x<2;++x)
+	var indx = 0;	
 	for(let i:number = 0;i<discoveryBridgeList.length;++i) {
 		var bridge = discoveryBridgeList[i];
 		let structure = $('#palette').find('.bridgeButton').clone();
 		$(structure).click(bridgeClick);
-		$(structure).find('.bridgeConnectButton').click(bridgeConnect);
+        $(structure).find('.bridgeConnectButton').click(bridgeConnectClick);
 		$(structure).attr('index', indx);
 		$(structure).find('.bridgeConnectButton').attr('index', indx);
 		$(structure).find('.bridgeAddress').text(bridge.internalipaddress);
@@ -129,7 +249,8 @@ function addKeyListener() {
 }
 
 //Initialize function
-function  main  () {	
+function main() {
+    smPair.setElement($('#pairBridge')[0]);
 	addKeyListener();
 	hueFinder.find()
 	.then((vBridge)=>{
@@ -151,16 +272,8 @@ function  main  () {
 			setTimeout(activate, 4000);
 		},4000)			
 	}
-
-	
-    // TODO:: Do your initialization job
     console.log('init() called');
-    
- 
-    // add eventListener for keydown
-
 };
-// window.onload can work without <body onload="">
 window.onload = main;
 
 
@@ -170,7 +283,8 @@ function goToState(state:ViewStates) {
 	switch(state) {
 		case ViewStates.SplashScreen: newClass="splashScreen"		; break;
 		case ViewStates.ControlLights: newClass="controlLisghts";	break;
-		case ViewStates.SelectBridge: newClass = "selectBridge";	break;
+        case ViewStates.SelectBridge: newClass = "selectBridge"; break;
+        case ViewStates.PairBridge: newClass = "pairBridge"; break;
 		default: newClass = "splashScreen";
 	}
     rootVisual!.setAttribute('class', newClass);
