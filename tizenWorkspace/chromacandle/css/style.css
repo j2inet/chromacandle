@@ -98,6 +98,9 @@ body {
     display: none;
     opacity: 0;
     transition:opacity 3s;
+    width:1920px;
+    height:1080px;
+    overflow: clip;
 }
 
 
