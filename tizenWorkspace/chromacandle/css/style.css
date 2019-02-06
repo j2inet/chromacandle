@@ -119,6 +119,10 @@ body {
     opacity:1;
 }
 
+#confirmDialog { 
+    position:absolute;
+}
+
 .connectCountdown {
     font-size:20pt;
 }

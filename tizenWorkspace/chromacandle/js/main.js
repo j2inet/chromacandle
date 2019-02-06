@@ -13,7 +13,6 @@ var PairingScreenStates;
     PairingScreenStates["Waiting"] = "Waiting";
     PairingScreenStates["Pairing"] = "Pairing";
     PairingScreenStates["Success"] = "Success";
-    PairingScreenStates["Failed"] = "Failed";
 })(PairingScreenStates || (PairingScreenStates = {}));
 class ConfirmScreenModule {
     constructor(selector) {
@@ -21,6 +20,9 @@ class ConfirmScreenModule {
         this._parentElement = $(selector)[0];
         this._reply = null;
         this._confirmedCallback = () => { };
+    }
+    setDeactivateCallback(callback) {
+        this._deactivateCallback = callback;
     }
     setElement(element) {
         this._parentElement = element;
@@ -31,10 +33,13 @@ class ConfirmScreenModule {
         this._confirmed = false;
         this._confirmedCallback();
         $(this._parentElement).hide();
+        if (this._deactivateCallback)
+            this._deactivateCallback();
     }
     show(msg) {
         $(this._parentElement).find('.modalPrompt').text(msg);
         $(this._parentElement).show();
+        $(this._parentElement).css({ "opacity": "1" });
         $(this._parentElement).find('.selectedButton').removeClass('.selectedButton');
         return new Promise((resolve, reject) => {
             this._confirmed = false;
@@ -75,30 +80,35 @@ class ConfirmScreenModule {
     }
 }
 class PairScreenModule {
-    constructor(services) {
+    constructor(services, parentElement) {
         this._isRetryRequested = false;
         this._remainingPairTime = 0;
         this._pairTimer = 0;
-        this._bridge = null;
         this._state = PairingScreenStates.Waiting;
-        this._parentElement = null;
+        this._parentElement = parentElement;
         this._services = services;
+    }
+    setDeactivateCallback(callback) {
+        this._deactivateCallback = callback;
     }
     setElement(element) {
         this._parentElement = element;
     }
-    setBridge(bridge) {
+    set bridge(bridge) {
         this._bridge = bridge;
+    }
+    get bridge() {
+        return this._bridge;
     }
     goToState(state) {
         this._state = state;
         $(this._parentElement)
             .removeClass('PairScreen-Waiting')
             .removeClass('PairingScreen-Pairing')
-            .removeClass('PairingScreen-Success')
-            .removeClass('PairingScreen-Failed');
+            .removeClass('PairingScreen-Success');
         $(this._parentElement)
             .addClass(`PairingScreen-${state}`);
+        console.log(`Changing Pairing state to PairingScreen-${state}`);
     }
     activate() {
         this.goToState(PairingScreenStates.Pairing);
@@ -108,6 +118,8 @@ class PairScreenModule {
         if (this._pairTimer != 0) {
             clearInterval(this._pairTimer);
         }
+        if (this._deactivateCallback)
+            this._deactivateCallback();
     }
     startPairing() {
         return new Promise((resolve, reject) => {
@@ -126,7 +138,16 @@ class PairScreenModule {
                 return;
             })
                 .catch(() => {
-                this.goToState(PairingScreenStates.Failed);
+                this._services.confirm("The button wasn't pressed within the allowed timeframe. Do you want to try again?")
+                    .then((isRetrying) => {
+                    clearInterval(this._pairTimer);
+                    this._pairTimer = 0;
+                    if (isRetrying)
+                        this.activate();
+                    else
+                        this.deactivate();
+                })
+                    .catch(() => { });
             });
             this._pairTimer = setInterval(() => {
                 if (this._remainingPairTime > 0) {
@@ -140,7 +161,6 @@ class PairScreenModule {
                     })
                         .catch(() => {
                     });
-                    this.goToState(PairingScreenStates.Failed);
                     clearInterval(this._pairTimer);
                     this._pairTimer = 0;
                 }
@@ -170,7 +190,7 @@ class PairScreenModule {
 class MainModule {
     constructor() {
         this._viewState = ViewStates.SplashScreen;
-        this._pairScreen = new PairScreenModule(this);
+        this._pairScreen = new PairScreenModule(this, $('#pairBridge')[0]);
         this._isModalActive = false;
         this._hdb = new HueDB();
         this._hueFinder = new HueFinder();
@@ -178,6 +198,18 @@ class MainModule {
         this._rememberedBridgeList = new Array();
         this._selectedBridgeIndex = 0;
         this._confirmScreen = new ConfirmScreenModule('#confirmDialog');
+        this._pairScreen.setDeactivateCallback(() => { this.pairingComplete(); });
+    }
+    pairingComplete() {
+        if (this._pairScreen.bridge.username) {
+            this.goToState(ViewStates.ControlLights);
+        }
+        else {
+            this.goToState(ViewStates.SelectBridge);
+        }
+    }
+    setDeactivateCallback(callback) {
+        this._deactivateCallback = callback;
     }
     activate() {
         var self = this;
@@ -286,7 +318,7 @@ class MainModule {
     }
     bridgeConnect(bridgeInfo) {
         this.goToState(ViewStates.PairBridge);
-        this._pairScreen.setBridge(new HueBridge(bridgeInfo));
+        this._pairScreen.bridge = new HueBridge(bridgeInfo);
         this._pairScreen.activate();
     }
     get selectedBridge() {

@@ -49,6 +49,7 @@ interface ILightState {
 	mode:string,
 	reachable:boolean
 }
+
 interface ICTRange { 
 	min:Number, 
 	max:Number
@@ -115,7 +116,6 @@ interface LightGroupList {
 
 }
 
-
 class HueBridge { 
 	constructor(b:IBridgeInfo, username?:string|null|undefined) {
 		if(!username) {
@@ -125,6 +125,9 @@ class HueBridge {
 		this._username = username;
 	};
 
+	get username():string|null {
+		return this._username;
+	}
 	async getGroups():Promise<Object> { 
 		const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/groups`;
 		return new Promise((resolve, reject)=> {

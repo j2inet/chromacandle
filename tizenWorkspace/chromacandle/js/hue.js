@@ -40,6 +40,9 @@ class HueBridge {
         this._username = username;
     }
     ;
+    get username() {
+        return this._username;
+    }
     getGroups() {
         return __awaiter(this, void 0, void 0, function* () {
             const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/groups`;

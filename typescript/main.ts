@@ -9,12 +9,10 @@ enum ViewStates {
     PairBridge
 };
 
-
 enum PairingScreenStates {
     Waiting = "Waiting",
     Pairing = "Pairing",
     Success = "Success",
-    Failed = "Failed"
 }
 
 interface UIServices { 
@@ -24,7 +22,8 @@ interface UIServices {
 interface ScreenModule {
     keyHandler(e: keyArgs): boolean;
     activate(): void;
-    deactivate(): void;
+	deactivate(): void;
+	setDeactivateCallback(callback:()=>void):void;
 }
 
 class ConfirmScreenModule implements ScreenModule {
@@ -32,6 +31,10 @@ class ConfirmScreenModule implements ScreenModule {
 		this._parentElement = $(selector)[0];
 		this._reply = null;
 		this._confirmedCallback = ()=>{}
+	}
+
+	setDeactivateCallback(callback:()=>void):void {
+		this._deactivateCallback = callback;
 	}
 
 	setElement(element:Element) { 
@@ -46,11 +49,14 @@ class ConfirmScreenModule implements ScreenModule {
 		this._confirmed = false;
 		this._confirmedCallback();
 		$(this._parentElement).hide();
+		if(this._deactivateCallback)
+			this._deactivateCallback!();
 	}
 
 	show(msg:string):Promise<boolean> { 
 		$(this._parentElement).find('.modalPrompt').text(msg);
 		$(this._parentElement).show();
+		$(this._parentElement).css({"opacity":"1"});
 		$(this._parentElement).find('.selectedButton').removeClass('.selectedButton');
 		return new Promise((resolve, reject)=>{
 			this._confirmed = false;
@@ -94,35 +100,42 @@ class ConfirmScreenModule implements ScreenModule {
 	_parentElement:Element;
 	_reply:boolean|null;
 	_confirmed:boolean = false;
+	private _deactivateCallback?:()=>void
 
 }
 
 class PairScreenModule implements ScreenModule {
 
-    constructor(services:UIServices) {
-        this._bridge = null;
+    constructor(services:UIServices, parentElement:Element) {
         this._state = PairingScreenStates.Waiting;
-		this._parentElement = null;
+		this._parentElement = parentElement;
 		this._services = services;
-    }
+	}
+	
+	setDeactivateCallback(callback:()=>void):void {
+		this._deactivateCallback = callback;
+	}
 
     setElement(element: Element) {
         this._parentElement = element;
 	}
 	
-    setBridge(bridge: HueBridge): void {
+    set bridge(bridge: HueBridge|undefined){
         this._bridge = bridge;
-    }
-
+	}
+	get bridge():HueBridge|undefined {
+		return this._bridge;
+	}
+	
     goToState(state: PairingScreenStates): void {
         this._state = state;
         $(this._parentElement!)
             .removeClass('PairScreen-Waiting')
             .removeClass('PairingScreen-Pairing')
             .removeClass('PairingScreen-Success')
-            .removeClass('PairingScreen-Failed');
         $(this._parentElement!)
-            .addClass(`PairingScreen-${state}`);
+			.addClass(`PairingScreen-${state}`);
+		console.log(`Changing Pairing state to PairingScreen-${state}`);
     }
 
     activate(): void {
@@ -133,7 +146,9 @@ class PairScreenModule implements ScreenModule {
     deactivate(): void {
         if (this._pairTimer != 0) {
             clearInterval(this._pairTimer);
-        }
+		}
+		if(this._deactivateCallback)
+			this._deactivateCallback!();
     }
 
     startPairing(): Promise<HueBridge> {
@@ -153,7 +168,17 @@ class PairScreenModule implements ScreenModule {
                     return;
                 })
                 .catch(() => {
-                    this.goToState(PairingScreenStates.Failed);
+					this._services.confirm("The button wasn't pressed within the allowed timeframe. Do you want to try again?")
+					.then((isRetrying:boolean)=> {
+						clearInterval(this._pairTimer);
+						this._pairTimer = 0;
+						if(isRetrying)
+							this.activate();
+						else
+							this.deactivate();
+
+					})
+					.catch(()=>{});
                 });
             this._pairTimer = setInterval(() => {
                 if (this._remainingPairTime > 0) {
@@ -168,7 +193,7 @@ class PairScreenModule implements ScreenModule {
 					.catch(()=>{
 
 					});
-                    this.goToState(PairingScreenStates.Failed);
+                    
                     clearInterval(this._pairTimer);
                     this._pairTimer = 0;
                 }
@@ -200,18 +225,33 @@ class PairScreenModule implements ScreenModule {
 
 	private _isRetryRequested:boolean = false;
     private _remainingPairTime = 0;
-    private _bridge: HueBridge|null;
+    private _bridge?: HueBridge;
     private _pairTimer = 0;
     private _state: PairingScreenStates;
 	private _parentElement: Element|null;
 	private _services:UIServices;
+	private _deactivateCallback?:()=>void;
+	
 }
 
 
 class MainModule implements ScreenModule, UIServices { 
 	constructor() { 
 		this._confirmScreen = new ConfirmScreenModule('#confirmDialog');
+		this._pairScreen.setDeactivateCallback(()=>{this.pairingComplete();});
 	}
+
+	pairingComplete():void {
+		if(this._pairScreen.bridge!.username) {
+			this.goToState(ViewStates.ControlLights);
+		} else {
+			this.goToState(ViewStates.SelectBridge);
+		}
+	}
+	setDeactivateCallback(callback:()=>void):void {
+		this._deactivateCallback = callback;
+	}
+
 	activate() { 
 		var self = this;
 		this.goToState(ViewStates.SplashScreen);
@@ -332,7 +372,7 @@ class MainModule implements ScreenModule, UIServices {
 
 	bridgeConnect(bridgeInfo: IBridgeInfo) {
 		this.goToState(ViewStates.PairBridge);
-		this._pairScreen.setBridge(new HueBridge(bridgeInfo));
+		this._pairScreen.bridge = new HueBridge(bridgeInfo);
 		this._pairScreen.activate();		
 	}
 	
@@ -385,7 +425,7 @@ class MainModule implements ScreenModule, UIServices {
 
 	private _viewState:ViewStates = ViewStates.SplashScreen;
 	private _confirmScreen:ConfirmScreenModule ;
-	private  _pairScreen: PairScreenModule = new PairScreenModule(this);
+	private  _pairScreen: PairScreenModule = new PairScreenModule(this, $('#pairBridge')[0]);
 	private _isModalActive = false;
 	
 	private _hdb = new HueDB();
@@ -394,7 +434,7 @@ class MainModule implements ScreenModule, UIServices {
 	private _discoveryBridgeList:Array<IBridgeInfo> = new Array<IBridgeInfo>();
 	private _rememberedBridgeList:Array<IBridgeInfo> = new Array<IBridgeInfo>();	
 	private _selectedBridgeIndex = 0;
-
+	private _deactivateCallback?:()=>void
 }
 
 
