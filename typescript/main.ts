@@ -87,8 +87,10 @@ class ConfirmScreenModule implements ScreenModule {
 				return true;
                 break;
 			case 13: //OK button
-				if(this._confirmed)
+				if(this._confirmed) {
 					this._confirmedCallback();
+					this.deactivate();
+				}
 				break;
 			case 10009: //RETURN button
 				this._confirmed = false;
@@ -158,7 +160,8 @@ class PairScreenModule implements ScreenModule {
                 reject();
                 return;
             }
-            this._remainingPairTime = PAIRING_TIMEOUT / SECOND;
+			this._remainingPairTime = PAIRING_TIMEOUT / SECOND;
+			$('.connectCountdown').text(this._remainingPairTime);
             this._bridge!.tryPair()
                 .then((userNameResponse) => {
                     clearInterval(this._pairTimer);
@@ -168,9 +171,10 @@ class PairScreenModule implements ScreenModule {
                     return;
                 })
                 .catch(() => {
+					clearInterval(this._pairTimer);
 					this._services.confirm("The button wasn't pressed within the allowed timeframe. Do you want to try again?")
 					.then((isRetrying:boolean)=> {
-						clearInterval(this._pairTimer);
+						
 						this._pairTimer = 0;
 						if(isRetrying)
 							this.activate();
@@ -180,23 +184,9 @@ class PairScreenModule implements ScreenModule {
 					})
 					.catch(()=>{});
                 });
-            this._pairTimer = setInterval(() => {
-                if (this._remainingPairTime > 0) {
-                    --this._remainingPairTime;
-                    $('.connectCountdown').text(this._remainingPairTime);
-                } else {
-					reject('timeout');
-					this._services.confirm("The button wasn't pressed within the time limit. Do you want to try again?")
-					.then((reply:boolean)=> {
-
-					})
-					.catch(()=>{
-
-					});
-                    
-                    clearInterval(this._pairTimer);
-                    this._pairTimer = 0;
-                }
+            this._pairTimer = setInterval(() => {                
+				--this._remainingPairTime;
+				$('.connectCountdown').text(this._remainingPairTime);                
             }, 1000);
         });
     }
@@ -358,11 +348,11 @@ class MainModule implements ScreenModule, UIServices {
 			this._isModalActive = true;
 			this._confirmScreen.show(msg)
 			.then((response)=>{
-				this._isModalActive = false;
+				this._isModalActive = false;				
 				resolve(response);
 			})
 			.catch(()=> {
-				this._isModalActive = false;
+				this._isModalActive = false;				
 				reject();
 			});
 		})

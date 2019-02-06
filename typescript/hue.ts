@@ -219,8 +219,10 @@ class HueBridge {
 	async tryPair(): Promise<IUsernameResponse> {
 		return new Promise<IUsernameResponse>((resolve, reject) => 
 		{
+			var self = this;
 			let keepTrying = true;
 			this._retryTimer = setTimeout(()=>{
+				self.cancelPair()
 				reject("failed to pair");
 			}, PAIRING_TIMEOUT);
 			this._tryTimer = setInterval(()=>{

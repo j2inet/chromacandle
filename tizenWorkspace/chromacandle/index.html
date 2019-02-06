@@ -64,12 +64,18 @@
         </div>
 
         <div id="confirmDialog">
-            <div>
-                <div class="modalPrompt">
-                    The button wasn't pressed within the allowed timeframe. Do you want to try again?
-                </div>
-                <div class="yesNoPrompt">
-                    <table>
+            <div class="backgroundOverlay"></div>
+            <div class="confirmDialogForeground">
+
+                <div>
+                    <table  class="yesNoPrompt">
+                        <tr>
+                            <th colspan="2">
+                                <div class="modalPrompt">
+                                    The button wasn't pressed within the allowed timeframe. Do you want to try again?
+                                </div>
+                            </th>
+                        </tr>
                         <tr>
                             <td>
                                 <div class="yesButton dialogButton selectedButton">Yes</div>
@@ -87,14 +93,24 @@
  	
  	<div class="palette" id="palette">
     <div class="bridgeButton">
-		<div class="bridge">
 
-			<img class="bridgeImage"  />
-			<div class="bridgeAddress">test test test</div>
-			<div class="bridgeId">test 2 test 2 test 2</div>
-			<div class="bridgeConnectButton">Connect</div>
-		</div>
-	</div>
+            <table  class="bridge">
+                <tr>
+                    <td rowspan="2"><img class="bridgeImage"  /></td>
+                    <td><div class="bridgeAddress">test test test</div></td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="bridgeId">test 2 test 2 test 2</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                            <div class="bridgeConnectButton">Connect</div>
+                    </td>
+                </tr>
+            </table>
+	    </div>
  	</div>
  	
 </body>

@@ -137,8 +137,10 @@ class HueBridge {
     tryPair() {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((resolve, reject) => {
+                var self = this;
                 let keepTrying = true;
                 this._retryTimer = setTimeout(() => {
+                    self.cancelPair();
                     reject("failed to pair");
                 }, PAIRING_TIMEOUT);
                 this._tryTimer = setInterval(() => {
