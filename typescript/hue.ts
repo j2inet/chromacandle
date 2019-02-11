@@ -110,11 +110,13 @@ interface ILightGroup {
 	name:string, 
 	type:string, 
 	action:Action
+	sensors:Array<Object>, //
+	recycle:boolean
 }
 
-interface LightGroupList {
 
-}
+type LightGroupList = Array<ILightGroup>;
+
 
 class HueBridge { 
 	constructor(b:IBridgeInfo, username?:string|null|undefined) {
@@ -167,9 +169,9 @@ class HueBridge {
 		});
 	}
 
-	async getScenes():Promise<Object> {
+	async getScenes():Promise<LightGroupList> {
 		const url = `http://${this._bridgeInfo.internalipaddress}/api/${this._username}/scenes`;
-		return new Promise((resolve,rejecct)=> {
+		return new Promise<LightGroupList>((resolve,rejecct)=> {
 			fetch(url)
 			.then(resp=>resp.json())
 			.then((data)=> {

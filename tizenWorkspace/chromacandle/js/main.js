@@ -205,10 +205,20 @@ class MainModule {
     pairingComplete() {
         if (this._pairScreen.bridge.username) {
             this.goToState(ViewStates.ControlLights);
+            this.refreshLightState();
         }
         else {
             this.goToState(ViewStates.SelectBridge);
         }
+    }
+    refreshLightState() {
+        if (this._hueBridge == null) {
+            this._hueBridge = new HueBridge(this.getSelectedBridge(), this.getSelectedBridge().userInfo.username);
+        }
+        this._hueBridge.getGroups()
+            .then((o) => {
+            console.log('Light State', o);
+        });
     }
     setDeactivateCallback(callback) {
         this._deactivateCallback = callback;
@@ -254,8 +264,9 @@ class MainModule {
         if (this._rememberedBridgeList.length == 1) {
             this.setSelectedBridge(this._rememberedBridgeList[0]);
             this._discoveryBridgeList.forEach((b) => {
-                if (b.id == this.getSelectedBridge().id)
+                if (b.id == this.getSelectedBridge().id) {
                     this.getSelectedBridge().internalipaddress = b.internalipaddress;
+                }
             });
             this.goToState(ViewStates.ControlLights);
         }
@@ -347,8 +358,10 @@ class MainModule {
     setSelectedBridge(b) {
         this._selectedBridgeIndex = -1;
         for (var i = 0; i < this._discoveryBridgeList.length; ++i) {
-            if (this._discoveryBridgeList[i].id == b.id)
+            if (this._discoveryBridgeList[i].id == b.id) {
                 this._selectedBridgeIndex = i;
+                this._discoveryBridgeList[i].userInfo = b.userInfo;
+            }
         }
     }
     bridgeClick(e) {
@@ -383,6 +396,7 @@ class MainModule {
                 break;
             case ViewStates.ControlLights:
                 newClass = "controlLights";
+                this.refreshLightState();
                 break;
             case ViewStates.SelectBridge:
                 newClass = "selectBridge";
@@ -396,6 +410,10 @@ class MainModule {
             default: newClass = "splashScreen";
         }
         rootVisual.setAttribute('class', newClass);
+    }
+    getLightInfo() {
+        return new Promise((resolve, reject) => {
+        });
     }
 }
 window.onload = () => {

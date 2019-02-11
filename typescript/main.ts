@@ -245,9 +245,20 @@ class MainModule implements ScreenModule, UIServices {
 	pairingComplete():void {
 		if(this._pairScreen.bridge!.username) {
 			this.goToState(ViewStates.ControlLights);
+			this.refreshLightState();
 		} else {
 			this.goToState(ViewStates.SelectBridge);
 		}
+	}
+
+	refreshLightState() { 
+		if(this._hueBridge == null) {
+			this._hueBridge = new HueBridge(this.getSelectedBridge(), this.getSelectedBridge().userInfo.username);
+		}
+		this._hueBridge!.getGroups()
+		.then((o)=> {
+			console.log('Light State', o);
+		});
 	}
 	setDeactivateCallback(callback:()=>void):void {
 		this._deactivateCallback = callback;
@@ -296,8 +307,9 @@ class MainModule implements ScreenModule, UIServices {
 		if(this._rememberedBridgeList.length == 1) {
 			this.setSelectedBridge(this._rememberedBridgeList[0]);
 			this._discoveryBridgeList.forEach((b)=> {
-				if(b.id == this.getSelectedBridge().id)
+				if(b.id == this.getSelectedBridge().id) {
 					this.getSelectedBridge().internalipaddress = b.internalipaddress;
+				}
 			});
 			this.goToState(ViewStates.ControlLights);
 		} else
@@ -402,8 +414,10 @@ class MainModule implements ScreenModule, UIServices {
 	setSelectedBridge(b:IBridgeInfo) {
 		this._selectedBridgeIndex = -1;
 		for(var i:number=0;i<this._discoveryBridgeList.length;++i) {
-			if(this._discoveryBridgeList[i].id == b.id)
+			if(this._discoveryBridgeList[i].id == b.id) {
 				this._selectedBridgeIndex = i;
+				this._discoveryBridgeList[i].userInfo = b.userInfo;
+			}
 		}
 	}
 
@@ -438,13 +452,21 @@ class MainModule implements ScreenModule, UIServices {
 		this._viewState = state;
 		switch(state) {
 			case ViewStates.SplashScreen: newClass="splashScreen"	;	break;
-			case ViewStates.ControlLights: newClass="controlLights";	break;
+			case ViewStates.ControlLights: newClass="controlLights";	
+				this.refreshLightState();
+				break;
 			case ViewStates.SelectBridge: newClass = "selectBridge" ; 	break;
 			case ViewStates.PairBridge: newClass = "pairBridge"     ; 	break;
 			case ViewStates.NoInternet: newClass = "noInternet"     ;  break;
 			default: newClass = "splashScreen";
 		}
 		rootVisual!.setAttribute('class', newClass);
+	}
+
+	getLightInfo():Promise<any> { 
+		return new Promise((resolve,reject)=> {
+			
+		});
 	}
 
 	private _viewState:ViewStates = ViewStates.SplashScreen;
@@ -454,6 +476,7 @@ class MainModule implements ScreenModule, UIServices {
 	
 	private _hdb = new HueDB();
 	private _hueFinder = new HueFinder();
+	private _hueBridge?:HueBridge;
 
 	private _discoveryBridgeList:Array<IBridgeInfo> = new Array<IBridgeInfo>();
 	private _rememberedBridgeList:Array<IBridgeInfo> = new Array<IBridgeInfo>();	

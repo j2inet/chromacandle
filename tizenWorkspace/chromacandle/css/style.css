@@ -3,7 +3,7 @@
 }
 
 html, body {
-    margin: 0px auto;
+    margin: 0px;
     padding: 0px;
     font-size: 30pt;
     color:white;
@@ -118,7 +118,7 @@ h1,h2,h3,h4 {
     margin:auto;
 }
 #rootVisual > div { 
-    position:abolute;
+    position:absolute;
     top:0px;
     left:0px;
     display: none;
@@ -127,6 +127,7 @@ h1,h2,h3,h4 {
     width:1920px;
     height:1080px;
     overflow: clip;
+    margin:0px;
 }
 
 
@@ -186,6 +187,9 @@ h1,h2,h3,h4 {
     font-size:20pt;
 }
 .rainboxText {
+    position:absolute;
+    top:0px;
+    width:1920px;
     color: transparent;
     background-image: url(../images/flame.jpg);
     background-repeat: repeat-x;
@@ -279,3 +283,21 @@ footer p {
     }
 }
 
+
+
+.categorySelection { 
+    position:absolute;
+    left:0px;
+    top:100px;
+    width:200px;
+    height:1080px;
+    background-color:red;
+}
+
+.controlArea {
+    position:absolute;
+    left:200px;
+    width:1720px;
+    height:1080px;
+    background-color: blue;
+}
