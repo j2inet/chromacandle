@@ -6,7 +6,8 @@ enum ViewStates {
 	SplashScreen,
 	SelectBridge,
     ControlLights,
-    PairBridge
+	PairBridge, 
+	NoInternet
 };
 
 enum PairingScreenStates {
@@ -142,7 +143,12 @@ class PairScreenModule implements ScreenModule {
 
     activate(): void {
 		this.goToState(PairingScreenStates.Pairing);        
-		this.startPairing();
+		this.startPairing()
+		.then((b)=> {
+			setTimeout(()=> {
+				this.deactivate();
+			}, 750);
+		});
 	}
 	
     deactivate(): void {
@@ -228,7 +234,12 @@ class PairScreenModule implements ScreenModule {
 class MainModule implements ScreenModule, UIServices { 
 	constructor() { 
 		this._confirmScreen = new ConfirmScreenModule('#confirmDialog');
-		this._pairScreen.setDeactivateCallback(()=>{this.pairingComplete();});
+		this._pairScreen.setDeactivateCallback(()=>{
+			this.pairingComplete();
+			var pairedBridge = this._pairScreen.bridge!;
+			this._hdb.insertBridge(pairedBridge._bridgeInfo);
+			console.log('paired bridge', pairedBridge);
+		});
 	}
 
 	pairingComplete():void {
@@ -245,8 +256,13 @@ class MainModule implements ScreenModule, UIServices {
 	activate() { 
 		var self = this;
 		this.goToState(ViewStates.SplashScreen);
-		this.beginBridgeSearch();
-		setTimeout(()=> self.tryBridgeConnect(),5000);
+		if(!navigator.onLine) {
+			this.goToState(ViewStates.NoInternet);
+		}
+		this.waitUntilOnline(()=>{
+			this.beginBridgeSearch();
+			setTimeout(()=> self.tryBridgeConnect(),5000);	
+		});
 	}
 
 	beginBridgeSearch() { 
@@ -263,12 +279,25 @@ class MainModule implements ScreenModule, UIServices {
 		});	
 	}
 
+	waitUntilOnline(callback:()=>void) {
+		if(navigator.onLine) {
+			callback();
+		}
+		else {
+			var checkTimer = setInterval(()=>{
+				if(navigator.onLine) {
+					clearTimeout(checkTimer);
+					callback();
+				}
+			}, 1000);
+		}
+	}
 	tryBridgeConnect() { 
 		if(this._rememberedBridgeList.length == 1) {
-			this.selectedBridge = (this._rememberedBridgeList[0]);
+			this.setSelectedBridge(this._rememberedBridgeList[0]);
 			this._discoveryBridgeList.forEach((b)=> {
-				if(b.id == this.selectedBridge.id)
-					this.selectedBridge.internalipaddress = b.internalipaddress;
+				if(b.id == this.getSelectedBridge().id)
+					this.getSelectedBridge().internalipaddress = b.internalipaddress;
 			});
 			this.goToState(ViewStates.ControlLights);
 		} else
@@ -367,11 +396,15 @@ class MainModule implements ScreenModule, UIServices {
 	}
 	
 
-	get selectedBridge():IBridgeInfo {
+	getSelectedBridge():IBridgeInfo {
 		return this._discoveryBridgeList[this._selectedBridgeIndex];
 	}
-	set selectedBridge(b:IBridgeInfo) {
-		this._selectedBridgeIndex = this._discoveryBridgeList.indexOf(b);
+	setSelectedBridge(b:IBridgeInfo) {
+		this._selectedBridgeIndex = -1;
+		for(var i:number=0;i<this._discoveryBridgeList.length;++i) {
+			if(this._discoveryBridgeList[i].id == b.id)
+				this._selectedBridgeIndex = i;
+		}
 	}
 
 	
@@ -405,9 +438,10 @@ class MainModule implements ScreenModule, UIServices {
 		this._viewState = state;
 		switch(state) {
 			case ViewStates.SplashScreen: newClass="splashScreen"	;	break;
-			case ViewStates.ControlLights: newClass="controlLisghts";	break;
+			case ViewStates.ControlLights: newClass="controlLights";	break;
 			case ViewStates.SelectBridge: newClass = "selectBridge" ; 	break;
 			case ViewStates.PairBridge: newClass = "pairBridge"     ; 	break;
+			case ViewStates.NoInternet: newClass = "noInternet"     ;  break;
 			default: newClass = "splashScreen";
 		}
 		rootVisual!.setAttribute('class', newClass);

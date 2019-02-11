@@ -145,6 +145,16 @@ h1,h2,h3,h4 {
     opacity:1;
 }
 
+#rootVisual.noInternet >  #noInternet {
+    display:block;
+    opacity:1;
+}
+
+#rootVisual.controlLights > #controlLights {
+    display:block;
+    opacity:1; 
+}
+
 #confirmDialog { 
     position:absolute;
 }

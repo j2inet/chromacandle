@@ -1,3 +1,8 @@
+// Type definitions for Tizen Web
+// Project: https://tizen.org
+// Definitions by: Joel Ivory Johnson <https://www.j2i.net>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+
 ///  https://www.tizen.org/ko/tv/web_device_api/application?langredirect=1#ApplicationManager
 
 declare	interface Window {  tizen:tizenInterface}

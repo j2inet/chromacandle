@@ -1,3 +1,9 @@
+// Type definitions for Tizen Web
+// Project: https://tizen.org
+// Definitions by: Joel Ivory Johnson <https://www.j2i.net>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+
+
 //--Sensor
 //https://developer.tizen.org/ko/development/api-references/web-application?redirect=https://developer.tizen.org/dev-guide/2.3.1/org.tizen.web.apireference/html/device_api/mobile/tizen/sensor.html
 
@@ -13,7 +19,7 @@ interface tizenInterface extends SensorServiceManagerObject {
 }
 
 interface SensorServiceManagerObject {
- sensorservice:SensorService;
+    sensorservice:SensorService;
 }
 
 

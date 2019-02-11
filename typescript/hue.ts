@@ -264,6 +264,7 @@ class HueBridge {
 					if(data[0].error) reject(data[0].error);
 					if(data[0].success) {
 						this._username = data[0].success.username;
+						this._bridgeInfo.userInfo = {username: this._username!};
 						resolve(data[0].success);
 					}
 				})
@@ -315,6 +316,7 @@ class HueDB {
 			let objStore = trans.objectStore(HUE_BRIDGE_OBJSTORE);
 			let request = objStore.add(b);	
 			request.onsuccess = () => {
+				console.log('write bridge to databae', b);
 				//
 			}
 		});
