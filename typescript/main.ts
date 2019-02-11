@@ -258,6 +258,7 @@ class MainModule implements ScreenModule, UIServices {
 		this._hueBridge!.getGroups()
 		.then((o)=> {
 			console.log('Light State', o);
+			console.log(JSON.stringify(o));
 		});
 	}
 	setDeactivateCallback(callback:()=>void):void {
