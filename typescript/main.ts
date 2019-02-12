@@ -358,6 +358,33 @@ class CategoryMenuModule implements ScreenModule {
 	private _selectedCategory: CategoryMenuItems;
 }
 
+class SettingsModule implements ScreenModule {
+	constructor(parentElement:Element, services:UIServices) {
+		this._services = services;
+		this._parentElement = parentElement;
+	}
+
+	keyHandler(e: keyArgs):boolean {
+		return false;
+	}
+    activate():void {
+
+	}
+
+	deactivate(): void {
+		if(this._deactivateCallback)
+			this._deactivateCallback!();
+	}
+
+	setDeactivateCallback(callback:Callback):void {
+		this._deactivateCallback = callback;
+	}
+
+	_deactivateCallback?:Callback;
+	_parentElement:Element;
+	_services:UIServices;
+}
+
 class SceneControlModule implements ScreenModule {
 	constructor(parentElement:Element, services:UIServices) {
 		this._services = services;
