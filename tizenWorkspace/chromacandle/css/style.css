@@ -67,6 +67,20 @@ h1,h2,h3,h4 {
     content:url(../images/hueIcons/devicesBridgesV2_white.svg)
 }
 
+
+.categoryMenuItem {
+    height: 45px;
+    width:190px;
+    text-align: center;
+    border: 2px solid transparent;
+    margin: 4px;
+    border-radius: 12px;
+}
+
+.selectedCategory {
+    border: 2px solid white;
+}
+
 .bridgeId {
     grid-row:3;
     grid-column:2;
@@ -291,13 +305,14 @@ footer p {
     top:100px;
     width:200px;
     height:1080px;
-    background-color:red;
+    background-color:#404040;
 }
 
 .controlArea {
     position:absolute;
-    left:200px;
+    top:0px;
+    left:0px;
     width:1720px;
     height:1080px;
-    background-color: blue;
+    background-color: black;
 }

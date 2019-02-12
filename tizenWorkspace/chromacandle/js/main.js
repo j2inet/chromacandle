@@ -177,11 +177,158 @@ class PairScreenModule {
                 $(this._parentElement).find('.noButton').addClass('selectedButton');
                 this._isRetryRequested = false;
                 return true;
-                break;
             case 13: //OK button
                 break;
         }
         return false;
+    }
+}
+var CategoryMenuItems;
+(function (CategoryMenuItems) {
+    CategoryMenuItems["Rooms"] = "Rooms";
+    CategoryMenuItems["Groups"] = "Groups";
+    CategoryMenuItems["Lights"] = "Lights";
+    CategoryMenuItems["Scenes"] = "Scenes";
+    CategoryMenuItems["Settings"] = "Settings";
+})(CategoryMenuItems || (CategoryMenuItems = {}));
+// I know this looks redundant as I could have used the string values of 
+// the enumerations. But I've introduced an layer between the enums and 
+// what the user sees so that the internal values are not as tightly 
+// coupled to what the user sees. 
+var CategoryMenuText = {
+    Rooms: "Rooms",
+    Groups: "Groups",
+    Lights: "Lights",
+    Scenes: "Scenes",
+    Settings: "Settings"
+};
+class CategoryMenuModule {
+    constructor(services, parentElement) {
+        this._parentElement = parentElement;
+        this._services = services;
+        this._selectedCategory = CategoryMenuItems.Groups;
+        this.buildMenu();
+        this.selectMenuItem(CategoryMenuItems.Rooms);
+    }
+    selectMenuItem(item) {
+        this._selectedCategory = item;
+        $(this._parentElement).children().removeClass('selectedCategory');
+        $(this._parentElement).find(`[itemID='${item}']`).addClass('selectedCategory');
+    }
+    nextItem() {
+        var item = $(this._parentElement).find('.selectedCategory');
+        if (item.length == 0) {
+            let targetItem = $(this._parentElement).children()[0];
+            $(targetItem).addClass('selectedCategory');
+        }
+        else {
+            var result = $(item[0]).next();
+            if (result == null || result.length == 0) {
+                $(this._parentElement).children().removeClass('selectedCategory');
+                var child = $(this._parentElement).children()[0];
+                $(child).addClass('selectedCategory');
+            }
+            else {
+                $(this._parentElement).children().removeClass('selectedCategory');
+                $(result).addClass('selectedCategory');
+            }
+        }
+    }
+    prevItem() {
+        var item = $(this._parentElement).find('.selectedCategory');
+        if (item.length == 0) {
+            let targetItem = $(this._parentElement).children()[0];
+            $(targetItem).addClass('selectedCategory');
+        }
+        else {
+            var result = $(item[0]).prev();
+            if (result == null || result.length == 0) {
+                $(this._parentElement).children().removeClass('selectedCategory');
+                var child = $(this._parentElement).children().last();
+                $(child).addClass('selectedCategory');
+            }
+            else {
+                $(this._parentElement).children().removeClass('selectedCategory');
+                $(result).addClass('selectedCategory');
+            }
+        }
+    }
+    buildMenu() {
+        var items = [
+            CategoryMenuItems.Rooms,
+            CategoryMenuItems.Groups,
+            CategoryMenuItems.Lights,
+            CategoryMenuItems.Scenes,
+            CategoryMenuItems.Settings
+        ];
+        items.forEach((item) => {
+            var menuItem = document.createElement("div");
+            menuItem.setAttribute('itemID', item);
+            menuItem.innerText = CategoryMenuText[item];
+            menuItem.setAttribute('class', 'categoryMenuItem');
+            this._parentElement.append(menuItem);
+        });
+    }
+    keyHandler(e) {
+        switch (e.keyCode) {
+            case 38: //UP arrow
+                this.prevItem();
+                return true;
+            case 40: //DOWN arrow
+                this.nextItem();
+                return true;
+            case 39: //RIGHT arrow
+                this.deactivate();
+            default:
+                break;
+        }
+        return false;
+    }
+    activate() {
+    }
+    deactivate() {
+        if (this._callback) {
+            this._callback();
+        }
+    }
+    setDeactivateCallback(callback) {
+        this._callback = callback;
+    }
+}
+class SceneControlModule {
+    constructor(parentElement, services) {
+        this._services = services;
+        this._parentElement = parentElement;
+    }
+    keyHandler(e) {
+        return false;
+    }
+    activate() {
+    }
+    deactivate() {
+        if (this._deactivateCallback)
+            this._deactivateCallback();
+    }
+    setDeactivateCallback(callback) {
+        this._deactivateCallback = callback;
+    }
+}
+class LightControlModule {
+    constructor(parentElement, services) {
+        this._services = services;
+        this._parentElement = parentElement;
+    }
+    keyHandler(e) {
+        return false;
+    }
+    activate() {
+    }
+    deactivate() {
+        if (this._deactivateCallback)
+            this._deactivateCallback();
+    }
+    setDeactivateCallback(callback) {
+        this._deactivateCallback = callback;
     }
 }
 class MainModule {
@@ -189,6 +336,7 @@ class MainModule {
         this._viewState = ViewStates.SplashScreen;
         this._pairScreen = new PairScreenModule(this, $('#pairBridge')[0]);
         this._isModalActive = false;
+        this._categoryMenu = new CategoryMenuModule(this, $('#categoryMenuParent')[0]);
         this._hdb = new HueDB();
         this._hueFinder = new HueFinder();
         this._discoveryBridgeList = new Array();
@@ -218,6 +366,7 @@ class MainModule {
         this._hueBridge.getGroups()
             .then((o) => {
             console.log('Light State', o);
+            console.log(JSON.stringify(o));
         });
     }
     setDeactivateCallback(callback) {
@@ -243,6 +392,11 @@ class MainModule {
             .then(() => {
             this._hdb.readBridgeList()
                 .then((vBridge) => {
+                if (vBridge.length == 0) {
+                    let b = { id: "001788fffe0a3d09", internalipaddress: "192.168.1.149", userInfo: { username: "IUXQd3KXHV1eOiuMQgcpBOEnD8Hg4EY7RDuBYjcM" } };
+                    this._rememberedBridgeList.push(b);
+                    this._hdb.insertBridge(b);
+                }
                 this._rememberedBridgeList = vBridge;
             });
         });
@@ -329,6 +483,8 @@ class MainModule {
             switch (this._viewState) {
                 case ViewStates.SelectBridge: return this.selectBridgeKeyHandler(e);
                 case ViewStates.PairBridge: return this._pairScreen.keyHandler(e);
+                case ViewStates.ControlLights: if (this._focusedModule)
+                    this._focusedModule.keyHandler(e);
             }
         }
         return false;
@@ -397,6 +553,7 @@ class MainModule {
             case ViewStates.ControlLights:
                 newClass = "controlLights";
                 this.refreshLightState();
+                this._focusedModule = this._categoryMenu;
                 break;
             case ViewStates.SelectBridge:
                 newClass = "selectBridge";

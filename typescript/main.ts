@@ -1,6 +1,7 @@
 //import $ from "jquery";
 
 type keyArgs = any;
+type Callback = ()=>void;
 
 enum ViewStates {
 	SplashScreen,
@@ -24,7 +25,7 @@ interface ScreenModule {
     keyHandler(e: keyArgs): boolean;
     activate(): void;
 	deactivate(): void;
-	setDeactivateCallback(callback:()=>void):void;
+	setDeactivateCallback(callback:Callback):void;
 }
 
 class ConfirmScreenModule implements ScreenModule {
@@ -211,7 +212,6 @@ class PairScreenModule implements ScreenModule {
 				$(this._parentElement!).find('.noButton').addClass('selectedButton');
 				this._isRetryRequested = false;
 				return true;
-                break;
             case 13: //OK button
                 break;
 
@@ -230,6 +230,189 @@ class PairScreenModule implements ScreenModule {
 	
 }
 
+enum CategoryMenuItems {
+	Rooms 	= "Rooms",
+	Groups 	= "Groups",
+	Lights 	= "Lights",
+	Scenes 	= "Scenes",
+	Settings = "Settings"
+}
+
+// I know this looks redundant as I could have used the string values of 
+// the enumerations. But I've introduced an layer between the enums and 
+// what the user sees so that the internal values are not as tightly 
+// coupled to what the user sees. 
+var CategoryMenuText = {
+	Rooms: "Rooms",
+	Groups:"Groups",
+	Lights: "Lights",
+	Scenes:"Scenes",
+	Settings:"Settings"
+}
+
+class CategoryMenuModule implements ScreenModule {
+
+	constructor(services:UIServices, parentElement:Element) {
+		this._parentElement = parentElement;
+		this._services = services;
+		this._selectedCategory = CategoryMenuItems.Groups;
+		this.buildMenu();
+		this.selectMenuItem(CategoryMenuItems.Rooms);
+	}
+
+	selectMenuItem( item:CategoryMenuItems) {
+		this._selectedCategory = item;
+		$(this._parentElement).children().removeClass('selectedCategory');
+		$(this._parentElement).find(`[itemID='${item}']`).addClass('selectedCategory');
+	}
+
+	nextItem() { 
+		var item = $(this._parentElement).find('.selectedCategory');
+		if(item.length==0) {
+			let targetItem = $(this._parentElement).children()[0];
+			$(targetItem).addClass('selectedCategory');
+		} else {
+			var result = $(item[0]).next();
+			if(result == null || result.length == 0) {
+				$(this._parentElement).children().removeClass('selectedCategory');
+				var child = $(this._parentElement).children()[0];
+				$(child).addClass('selectedCategory');
+			} else {
+				$(this._parentElement).children().removeClass('selectedCategory');
+				$(result).addClass('selectedCategory');
+			}
+		}
+	}
+
+	prevItem() {
+		var item = $(this._parentElement).find('.selectedCategory');
+		if(item.length==0) {
+			let targetItem = $(this._parentElement).children()[0];
+			$(targetItem).addClass('selectedCategory');
+		} else {
+			var result = $(item[0]).prev();
+			if(result == null || result.length == 0) {
+				$(this._parentElement).children().removeClass('selectedCategory');
+				var child = $(this._parentElement).children().last();
+				$(child).addClass('selectedCategory');
+			} else {
+				$(this._parentElement).children().removeClass('selectedCategory');
+				$(result).addClass('selectedCategory');
+			}
+		}		
+	}
+
+
+
+
+
+	private buildMenu() { 
+		var items = [
+			CategoryMenuItems.Rooms, 
+			CategoryMenuItems.Groups,
+			CategoryMenuItems.Lights,
+			CategoryMenuItems.Scenes,
+			CategoryMenuItems.Settings
+		];
+
+		items.forEach((item)=> {
+			var menuItem = document.createElement("div");
+			menuItem.setAttribute('itemID', item);
+			menuItem.innerText = CategoryMenuText[item];
+			menuItem.setAttribute('class', 'categoryMenuItem');
+			this._parentElement.append(menuItem);
+		});
+	}
+
+	keyHandler(e: keyArgs) {
+		switch(e.keyCode){
+			case 38: //UP arrow
+				this.prevItem();
+				return true;
+			case 40: //DOWN arrow
+				this.nextItem();
+				return true;
+			case 39: //RIGHT arrow
+				this.deactivate();
+			default:
+			break;
+		}		
+		return false;
+	}
+    activate() {
+
+	}
+	deactivate() {
+		if(this._callback) {
+			this._callback!();
+		}
+	}
+
+	setDeactivateCallback(callback:Callback) {
+		this._callback = callback;
+	}
+	
+	private _callback?:Callback;
+	private _parentElement:Element;
+	private _services:UIServices;
+	private _selectedCategory: CategoryMenuItems;
+}
+
+class SceneControlModule implements ScreenModule {
+	constructor(parentElement:Element, services:UIServices) {
+		this._services = services;
+		this._parentElement = parentElement;
+	}
+
+	keyHandler(e: keyArgs):boolean {
+		return false;
+	}
+    activate():void {
+
+	}
+
+	deactivate(): void {
+		if(this._deactivateCallback)
+			this._deactivateCallback!();
+	}
+
+	setDeactivateCallback(callback:Callback):void {
+		this._deactivateCallback = callback;
+	}
+
+	_deactivateCallback?:Callback;
+	_parentElement:Element;
+	_services:UIServices;
+
+}
+
+class LightControlModule implements ScreenModule {
+	constructor(parentElement:Element, services:UIServices) {
+		this._services = services;
+		this._parentElement = parentElement;
+	}
+
+	keyHandler(e: keyArgs): boolean {
+		return false;
+	}
+
+    activate(): void {
+
+	}
+
+	deactivate(): void {
+		if(this._deactivateCallback)
+			this._deactivateCallback!();
+	}
+
+	setDeactivateCallback(callback:Callback):void {
+		this._deactivateCallback = callback;
+	}
+
+	_deactivateCallback?:Callback;
+	_parentElement:Element;
+	_services:UIServices;
+}
 
 class MainModule implements ScreenModule, UIServices { 
 	constructor() { 
@@ -283,9 +466,14 @@ class MainModule implements ScreenModule, UIServices {
 			this._discoveryBridgeList = vBridge;
 		});
 		this._hdb.ensureCreate()
-		.then(()=>{
+		.then(()=>{			
 			this._hdb.readBridgeList()
 			.then ((vBridge) => {
+				if(vBridge.length==0) {
+					let b:IBridgeInfo = {id:"001788fffe0a3d09", internalipaddress:"192.168.1.149", userInfo:{ username:"IUXQd3KXHV1eOiuMQgcpBOEnD8Hg4EY7RDuBYjcM"} };
+					this._rememberedBridgeList.push(b);
+					this._hdb.insertBridge(b);
+				}
 				this._rememberedBridgeList = vBridge;
 			});
 		});	
@@ -379,7 +567,9 @@ class MainModule implements ScreenModule, UIServices {
 		else  {
 			switch(this._viewState) {
 				case ViewStates.SelectBridge: return this.selectBridgeKeyHandler(e);
-				case ViewStates.PairBridge: return this._pairScreen.keyHandler(e);				
+				case ViewStates.PairBridge: return this._pairScreen.keyHandler(e);	
+				case ViewStates.ControlLights: if(this._focusedModule)
+													this._focusedModule!.keyHandler(e);
 			}
 		}
 		return false;
@@ -455,6 +645,7 @@ class MainModule implements ScreenModule, UIServices {
 			case ViewStates.SplashScreen: newClass="splashScreen"	;	break;
 			case ViewStates.ControlLights: newClass="controlLights";	
 				this.refreshLightState();
+				this._focusedModule = this._categoryMenu;
 				break;
 			case ViewStates.SelectBridge: newClass = "selectBridge" ; 	break;
 			case ViewStates.PairBridge: newClass = "pairBridge"     ; 	break;
@@ -474,7 +665,9 @@ class MainModule implements ScreenModule, UIServices {
 	private _confirmScreen:ConfirmScreenModule ;
 	private  _pairScreen: PairScreenModule = new PairScreenModule(this, $('#pairBridge')[0]);
 	private _isModalActive = false;
-	
+	private _categoryMenu: CategoryMenuModule = new CategoryMenuModule(this, $('#categoryMenuParent')[0]);
+	private _focusedModule?: ScreenModule;
+
 	private _hdb = new HueDB();
 	private _hueFinder = new HueFinder();
 	private _hueBridge?:HueBridge;
@@ -483,8 +676,9 @@ class MainModule implements ScreenModule, UIServices {
 	private _rememberedBridgeList:Array<IBridgeInfo> = new Array<IBridgeInfo>();	
 	private _selectedBridgeIndex = 0;
 	private _deactivateCallback?:()=>void
-}
+	
 
+}
 
 window.onload = () => { 
 	let m:MainModule = new MainModule();
